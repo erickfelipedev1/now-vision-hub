@@ -18,6 +18,7 @@ import {
   RESUMO_UNIDADES,
   RECEITA_MENSAL,
   PERIODOS,
+  RECORTE,
   type PeriodoId,
 } from "@/data/mock";
 
@@ -59,7 +60,7 @@ function Variacao({ valor }: { valor: number }) {
 
 export default function PortalGrupoNow() {
   const [view, setView] = useState<View>("overview");
-  const [periodo, setPeriodo] = useState<PeriodoId>("90d");
+  const [periodo, setPeriodo] = useState<PeriodoId>("ano");
   const [menuAberto, setMenuAberto] = useState(false);
   const [telaCheia, setTelaCheia] = useState(false);
 
@@ -184,7 +185,7 @@ export default function PortalGrupoNow() {
               </h1>
               <p className="truncate text-[12px] text-[#6F7987]">
                 {view === "overview"
-                  ? "Consolidado das empresas do Grupo Now"
+                  ? `Consolidado das empresas do Grupo Now · ${RECORTE.rotulo} (${RECORTE.detalhe})`
                   : unidadeAtiva?.descricao}
               </p>
             </div>

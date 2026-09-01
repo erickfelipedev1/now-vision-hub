@@ -25,6 +25,23 @@ export interface UnidadeConfig {
    * em vez de cortado. Os dois painéis do grupo são de tela larga (modo TV).
    */
   larguraBase?: number;
+  /**
+   * Parâmetros anexados à URL do iframe — e SÓ ao iframe. É assim que a visão
+   * dos diretores pede o recorte anual sem mudar o padrão do painel para quem
+   * o abre direto: o projeto de origem lê o parâmetro quando ele vem, e segue
+   * no padrão dele quando não vem.
+   */
+  urlParams?: Record<string, string>;
+}
+
+/** Monta a URL do embed com os parâmetros da unidade, se houver. */
+export function urlDoEmbed(unidade: UnidadeConfig): string {
+  if (!unidade.urlParams) return unidade.url;
+  const url = new URL(unidade.url);
+  for (const [chave, valor] of Object.entries(unidade.urlParams)) {
+    url.searchParams.set(chave, valor);
+  }
+  return url.toString();
 }
 
 export const UNIDADES: UnidadeConfig[] = [
@@ -47,6 +64,8 @@ export const UNIDADES: UnidadeConfig[] = [
     cor: "#E8622C",
     fonteDados: "Clint CRM (via Supabase edge function)",
     larguraBase: 1920,
+    // A 4S é mensal por padrão; a visão dos diretores pede o acumulado do ano.
+    urlParams: { periodo: "anual", origem: "portal-diretoria" },
   },
 ];
 
