@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { revenueByMonth, companies } from "@/data/mock";
 
-const NLG = companies[0].color;
-const J4S = companies[1].color;
+const NLG = companies[0]!.color;
+const J4S = companies[1]!.color;
 
 const W = 720;
 const H = 260;
@@ -93,10 +93,10 @@ export function RevenueChart() {
             className="pointer-events-none absolute top-2 rounded-lg border border-border bg-surface-sunken px-3 py-2 text-xs shadow-lg"
             style={{ left: `${((PAD.left + hover * groupW + groupW / 2) / W) * 100}%`, transform: "translateX(-50%)" }}
           >
-            <div className="font-medium text-foreground">{revenueByMonth[hover].month}</div>
+            <div className="font-medium text-foreground">{revenueByMonth[hover]!.month}</div>
             <div className="mt-1 space-y-0.5 tabular-nums text-muted-foreground">
-              <div style={{ color: NLG }}>NLG Comex R$ {revenueByMonth[hover].nlg.toFixed(2)} M</div>
-              <div style={{ color: J4S }}>Jornada 4S R$ {revenueByMonth[hover].j4s.toFixed(2)} M</div>
+              <div style={{ color: NLG }}>NLG Comex R$ {revenueByMonth[hover]!.nlg.toFixed(2)} M</div>
+              <div style={{ color: J4S }}>Jornada 4S R$ {revenueByMonth[hover]!.j4s.toFixed(2)} M</div>
             </div>
           </div>
         )}
