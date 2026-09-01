@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2, RefreshCw, ExternalLink } from "lucide-react";
-import type { UnidadeConfig } from "@/config/dashboards";
+import { urlDoEmbed, type UnidadeConfig } from "@/config/dashboards";
 
 /**
  * Embeda um dashboard externo e o mostra POR INTEIRO.
@@ -65,9 +65,18 @@ export default function DashboardEmbed({
           style={{ background: unidade.cor }}
           aria-hidden="true"
         />
-        <span className="mr-auto text-[13px] text-[#8A94A3]">
+        <span className="text-[13px] text-[#8A94A3]">
           {unidade.fonteDados}
         </span>
+        {unidade.urlParams?.periodo === "anual" && (
+          <span
+            className="mr-auto rounded-full border border-[#243040] bg-[#131A23] px-2 py-0.5 text-[11px] text-[#8A94A3]"
+            title="O portal pede o recorte anual a este painel; aberto fora do portal ele mantém o padrão dele."
+          >
+            ano corrente
+          </span>
+        )}
+        {unidade.urlParams?.periodo !== "anual" && <span className="mr-auto" />}
 
         <div className="flex items-center gap-1 rounded-lg border border-[#1C242F] bg-[#0B0F14] p-1">
           <button
@@ -121,7 +130,7 @@ export default function DashboardEmbed({
           Atualizar
         </button>
         <a
-          href={unidade.url}
+          href={urlDoEmbed(unidade)}
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1.5 rounded-lg border border-[#1C242F] px-2.5 py-2 text-[12px] text-[#8A94A3] transition-colors hover:text-[#E9EDF2]"
@@ -152,7 +161,7 @@ export default function DashboardEmbed({
         {caixa.largura > 0 && (
           <iframe
             key={`${unidade.id}-${recarregar}`}
-            src={unidade.url}
+            src={urlDoEmbed(unidade)}
             title={`Dashboard ${unidade.nome}`}
             onLoad={() => setCarregando(false)}
             className="border-0"

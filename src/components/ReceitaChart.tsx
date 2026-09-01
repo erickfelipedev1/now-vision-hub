@@ -47,10 +47,10 @@ export default function ReceitaChart() {
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
         <div>
           <h3 className="text-[15px] font-semibold text-[#E9EDF2]">
-            Receita mensal por unidade
+            Receita por unidade no ano
           </h3>
           <p className="text-[13px] text-[#8A94A3]">
-            Em R$ mil · últimos 6 meses
+            Em R$ mil · mês a mês do ano corrente
           </p>
         </div>
         <div className="flex items-center gap-4">
