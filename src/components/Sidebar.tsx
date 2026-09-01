@@ -1,5 +1,6 @@
 import { LayoutDashboard, X } from "lucide-react";
 import { companies, user } from "@/data/mock";
+import LogoGrupoNow from "./LogoGrupoNow";
 
 export type View = "overview" | "nlg" | "j4s";
 
@@ -32,15 +33,7 @@ export function Sidebar({
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-5">
-          <div>
-            <div
-              className="bg-clip-text text-sm font-semibold text-transparent"
-              style={{ backgroundImage: "linear-gradient(90deg,#E8622C,#B8862B,#2E9BB5)" }}
-            >
-              Grupo Now
-            </div>
-            <div className="text-[11px] text-text-tertiary">Portal executivo</div>
-          </div>
+          <LogoGrupoNow className="h-8 w-auto" />
           <button onClick={onClose} className="text-muted-foreground lg:hidden" aria-label="Fechar menu">
             <X className="size-4" />
           </button>
