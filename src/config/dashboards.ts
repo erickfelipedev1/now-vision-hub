@@ -58,7 +58,7 @@ export const UNIDADES: UnidadeConfig[] = [
   {
     id: "pulse4s",
     nome: "Jornada 4S",
-    descricao: "SDR Analytics — performance de SDRs",
+    descricao: "SDR Analytics — Performance de SDRs no Clint CRM",
     repo: "clint-pulse",
     url: "https://clint-pulse.lovable.app",
     cor: "#E8622C",
