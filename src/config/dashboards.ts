@@ -60,7 +60,7 @@ export const UNIDADES: UnidadeConfig[] = [
     nome: "Jornada 4S",
     descricao: "SDR Analytics — Performance de SDRs no Clint CRM",
     repo: "clint-pulse",
-    url: "https://clint-pulse.lovable.app",
+    url: "https://clint-pulse.lovable.app/diretores",
     cor: "#E8622C",
     fonteDados: "Clint CRM (via Supabase edge function)",
     larguraBase: 1920,
