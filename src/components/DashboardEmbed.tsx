@@ -68,7 +68,7 @@ export default function DashboardEmbed({
         <span className="text-[13px] text-[#8A94A3]">
           {unidade.fonteDados}
         </span>
-        {unidade.urlParams?.periodo === "anual" && (
+        {unidade.urlParams?.["periodo"] === "anual" && (
           <span
             className="mr-auto rounded-full border border-[#243040] bg-[#131A23] px-2 py-0.5 text-[11px] text-[#8A94A3]"
             title="O portal pede o recorte anual a este painel; aberto fora do portal ele mantém o padrão dele."
@@ -76,7 +76,7 @@ export default function DashboardEmbed({
             ano corrente
           </span>
         )}
-        {unidade.urlParams?.periodo !== "anual" && <span className="mr-auto" />}
+        {unidade.urlParams?.["periodo"] !== "anual" && <span className="mr-auto" />}
 
         <div className="flex items-center gap-1 rounded-lg border border-[#1C242F] bg-[#0B0F14] p-1">
           <button
