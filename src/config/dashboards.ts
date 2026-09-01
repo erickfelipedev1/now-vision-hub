@@ -34,7 +34,7 @@ export const UNIDADES: UnidadeConfig[] = [
     descricao: "Painel de metas — transporte, agenciamento e desembaraço",
     repo: "groupnow-nlgcomex",
     url: "https://groupnow-nlgcomex.lovable.app",
-    cor: "#E8622C",
+    cor: "#2E9BB5",
     fonteDados: "API interna NLG",
     larguraBase: 1920,
   },
@@ -44,15 +44,15 @@ export const UNIDADES: UnidadeConfig[] = [
     descricao: "SDR Analytics — performance de SDRs",
     repo: "clint-pulse",
     url: "https://clint-pulse.lovable.app",
-    cor: "#2E9BB5",
+    cor: "#E8622C",
     fonteDados: "Clint CRM (via Supabase edge function)",
     larguraBase: 1920,
   },
 ];
 
 export const CORES = {
-  nlg: "#E8622C",
-  pulse: "#2E9BB5",
+  nlg: "#2E9BB5",
+  pulse: "#E8622C",
   dourado: "#B8862B",
   roxo: "#7C6BD8",
   bom: "#3E9B62",
