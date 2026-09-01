@@ -62,9 +62,10 @@ export const companies: Company[] = [
       { label: "Processos ativos", value: "212", delta: 4.1 },
       { label: "Margem", value: "18,4%", delta: 0.8 },
     ],
-    dashboardUrl: "https://nlg-comex-dashboard.lovable.app/",
-    sourceNote: "Dados operacionais consolidados diariamente às 06h (BRT).",
-    repo: "grupo-now/nlg-comex-dashboard",
+    dashboardUrl: "https://groupnow-nlgcomex.lovable.app",
+    sourceNote:
+      "Painel de metas — transporte, agenciamento e desembaraço · Fonte: API interna NLG.",
+    repo: "groupnow-nlgcomex",
   },
   {
     id: "j4s",
@@ -78,9 +79,10 @@ export const companies: Company[] = [
       { label: "Contratos ativos", value: "87", delta: 3.4 },
       { label: "Churn", value: "2,1%", delta: 0.6 },
     ],
-    dashboardUrl: "https://jornada-4s-dashboard.lovable.app/",
-    sourceNote: "Dados de CRM sincronizados a cada 4 horas.",
-    repo: "grupo-now/jornada-4s-dashboard",
+    dashboardUrl: "https://clint-pulse.lovable.app",
+    sourceNote:
+      "SDR Analytics — performance de SDRs · Fonte: Clint CRM (via Supabase edge function).",
+    repo: "clint-pulse",
   },
 ];
 
