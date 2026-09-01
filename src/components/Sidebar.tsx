@@ -1,5 +1,6 @@
 import { LayoutDashboard, X } from "lucide-react";
 import { companies, user } from "@/data/mock";
+import LogoGrupoNow from "./LogoGrupoNow";
 
 export type View = "overview" | "nlg" | "j4s";
 
