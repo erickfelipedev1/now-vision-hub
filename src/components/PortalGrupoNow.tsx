@@ -33,6 +33,7 @@ const STATUS_COR: Record<string, string> = {
 const DIRETORIA = [
   { nome: "Giuliano Redua", cargo: "Diretoria", iniciais: "GR" },
   { nome: "José Olacyr", cargo: "Diretoria", iniciais: "JO" },
+  { nome: "Josivaldo", cargo: "Diretoria", iniciais: "JS" },
 ];
 
 const STATUS_ROTULO: Record<string, string> = {
