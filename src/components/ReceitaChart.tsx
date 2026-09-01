@@ -178,7 +178,7 @@ export default function ReceitaChart() {
           }}
         >
           <p className="mb-2 text-[12px] font-medium text-[#E9EDF2]">
-            {RECEITA_MENSAL[ativo].mes}
+            {RECEITA_MENSAL[ativo]!.mes}
           </p>
           {SERIES.map((s) => (
             <div
@@ -193,7 +193,7 @@ export default function ReceitaChart() {
                 {s.nome}
               </span>
               <span className="text-[12px] font-medium tabular-nums text-[#E9EDF2]">
-                {RECEITA_MENSAL[ativo][s.id]}
+                {RECEITA_MENSAL[ativo]![s.id]}
               </span>
             </div>
           ))}
