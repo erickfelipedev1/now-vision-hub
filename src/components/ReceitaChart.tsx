@@ -150,10 +150,10 @@ export default function ReceitaChart() {
           }}
         >
           <p className="text-[12px] font-medium text-[#E9EDF2]">
-            {RECEITA_MENSAL[ativo].mes}
+            {RECEITA_MENSAL[ativo]!.mes}
           </p>
           <p className="text-[13px] font-semibold tabular-nums text-[#E9EDF2]">
-            R$ {fmt(RECEITA_MENSAL[ativo].nlgcomex)} mil
+            R$ {fmt(RECEITA_MENSAL[ativo]!.nlgcomex)} mil
           </p>
         </div>
       )}
