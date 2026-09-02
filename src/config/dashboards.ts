@@ -64,8 +64,9 @@ export const UNIDADES: UnidadeConfig[] = [
     cor: "#E8622C",
     fonteDados: "Clint CRM (via Supabase edge function)",
     larguraBase: 1920,
-    // A 4S é mensal por padrão; a visão dos diretores pede o acumulado do ano.
-    urlParams: { periodo: "anual", origem: "portal-diretoria" },
+    // A rota /diretores já é anual; só sinalizamos a origem para o painel
+    // esconder a navegação própria dentro do iframe.
+    urlParams: { origem: "portal-diretoria" },
   },
 ];
 
