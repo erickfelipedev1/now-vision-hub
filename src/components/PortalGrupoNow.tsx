@@ -1,15 +1,14 @@
 import { useState } from "react";
 import {
   ArrowUpRight,
-  BarChart3,
+  AlertTriangle,
   LayoutGrid,
   Menu,
   ShieldCheck,
-  TrendingDown,
-  TrendingUp,
   X,
 } from "lucide-react";
 import ReceitaChart from "@/components/ReceitaChart";
+import ProgressoMetas from "@/components/ProgressoMetas";
 import LogoGrupoNow from "@/components/LogoGrupoNow";
 import DashboardEmbed from "@/components/DashboardEmbed";
 import { UNIDADES, CORES, type UnidadeId } from "@/config/dashboards";
@@ -19,6 +18,9 @@ import {
   RECEITA_MENSAL,
   PERIODOS,
   RECORTE,
+  LEITURA,
+  OBSERVACOES,
+  type Origem,
   type PeriodoId,
 } from "@/data/mock";
 
@@ -28,6 +30,7 @@ const STATUS_COR: Record<string, string> = {
   bom: CORES.bom,
   atencao: CORES.atencao,
   critico: CORES.critico,
+  "sem-dado": "#6F7987",
 };
 
 /** Quem acompanha o portal. Ajuste os cargos se precisar. */
@@ -41,19 +44,26 @@ const STATUS_ROTULO: Record<string, string> = {
   bom: "Saudável",
   atencao: "Atenção",
   critico: "Crítico",
+  "sem-dado": "Sem dado anual",
 };
 
-function Variacao({ valor }: { valor: number }) {
-  const positivo = valor >= 0;
-  const Icone = positivo ? TrendingUp : TrendingDown;
+/**
+ * Selo de procedência. O que torna esta tela confiável não é a ausência de
+ * lacunas — é o leitor conseguir distinguir, sem perguntar, o que foi lido do
+ * painel, o que foi calculado e o que ainda não existe.
+ */
+function SeloOrigem({ origem }: { origem: Origem }) {
+  if (origem === "painel") return null;
+  const cfg =
+    origem === "derivado"
+      ? { texto: "derivado", cor: "#8A94A3", borda: "#243040" }
+      : { texto: "sem dado", cor: CORES.atencao, borda: "#3A2F1A" };
   return (
     <span
-      className="inline-flex items-center gap-1 text-[12px] font-medium tabular-nums"
-      style={{ color: positivo ? CORES.bom : CORES.critico }}
+      className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium"
+      style={{ color: cfg.cor, borderColor: cfg.borda }}
     >
-      <Icone size={13} aria-hidden="true" />
-      {positivo ? "+" : ""}
-      {valor.toFixed(1)}%
+      {cfg.texto}
     </span>
   );
 }
@@ -223,23 +233,32 @@ export default function PortalGrupoNow() {
                       key={k.id}
                       className="rounded-xl border border-[#1C242F] bg-[#12171F] p-5"
                     >
-                      <p className="mb-3 text-[12px] text-[#8A94A3]">
-                        {k.rotulo}
-                      </p>
-                      <p className="mb-2 whitespace-nowrap text-[24px] font-semibold leading-none tracking-tight tabular-nums">
-                        {k.valor}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <Variacao valor={k.variacao} />
-                        <span className="text-[12px] text-[#6F7987]">
-                          {k.detalhe}
-                        </span>
+                      <div className="mb-3 flex items-start justify-between gap-2">
+                        <p className="text-[12px] text-[#8A94A3]">{k.rotulo}</p>
+                        <SeloOrigem origem={k.origem} />
                       </div>
+                      {k.valor ? (
+                        <p className="mb-2 whitespace-nowrap text-[24px] font-semibold leading-none tracking-tight tabular-nums">
+                          {k.valor}
+                        </p>
+                      ) : (
+                        <p className="mb-2 text-[24px] font-semibold leading-none tracking-tight text-[#3E4855]">
+                          —
+                        </p>
+                      )}
+                      <span className="text-[12px] text-[#6F7987]">
+                        {k.detalhe}
+                      </span>
                     </div>
                   ))}
                 </section>
 
-                {/* Gráfico consolidado */}
+                {/* Meta anual — a pergunta principal da diretoria */}
+                <section className="mb-6 rounded-xl border border-[#1C242F] bg-[#12171F] p-5 lg:p-6">
+                  <ProgressoMetas />
+                </section>
+
+                {/* Série mensal da NLG */}
                 <section className="mb-6 rounded-xl border border-[#1C242F] bg-[#12171F] p-5 lg:p-6">
                   <ReceitaChart />
                   <details className="mt-5 border-t border-[#1C242F] pt-4">
@@ -266,7 +285,9 @@ export default function PortalGrupoNow() {
                               {d.nlgcomex}
                             </td>
                             <td className="py-1.5 text-right tabular-nums">
-                              {d.pulse4s}
+                              {d.pulse4s ?? (
+                                <span className="text-[#3E4855]">sem dado</span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -319,10 +340,16 @@ export default function PortalGrupoNow() {
                               <p className="mb-1 text-[11px] text-[#6F7987]">
                                 {m.rotulo}
                               </p>
-                              <p className="text-[16px] font-semibold tabular-nums">
-                                {m.valor}
-                              </p>
-                              <Variacao valor={m.variacao} />
+                              {m.valor ? (
+                                <p className="text-[16px] font-semibold tabular-nums">
+                                  {m.valor}
+                                </p>
+                              ) : (
+                                <p className="text-[16px] font-semibold text-[#3E4855]">
+                                  —
+                                </p>
+                              )}
+                              <SeloOrigem origem={m.origem} />
                             </div>
                           ))}
                         </div>
@@ -343,11 +370,24 @@ export default function PortalGrupoNow() {
                   })}
                 </section>
 
-                <p className="mt-6 flex items-center gap-1.5 text-[12px] text-[#5A6472]">
-                  <BarChart3 size={13} aria-hidden="true" />
-                  Números de demonstração — as integrações reais entram no lugar
-                  do arquivo <code className="text-[#6F7987]">src/data/mock.ts</code>.
-                </p>
+                <section className="mt-6 rounded-xl border border-[#1C242F] bg-[#12171F] p-5">
+                  <p className="mb-3 flex items-center gap-1.5 text-[12px] font-medium text-[#8A94A3]">
+                    <AlertTriangle size={13} aria-hidden="true" />
+                    A conferir
+                  </p>
+                  <ul className="space-y-1.5">
+                    {OBSERVACOES.map((o) => (
+                      <li key={o} className="text-[12px] leading-relaxed text-[#6F7987]">
+                        {o}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-4 border-t border-[#1C242F] pt-3 text-[11px] text-[#5A6472]">
+                    Números lidos dos painéis de origem em {LEITURA.data}, às{" "}
+                    {LEITURA.hora}. Cartões sem selo vêm direto do painel; os
+                    marcados são calculados ou ainda não existem na origem.
+                  </p>
+                </section>
               </div>
             ) : (
               unidadeAtiva && (
