@@ -12,26 +12,11 @@ import ProgressoMetas from "@/components/ProgressoMetas";
 import LogoGrupoNow from "@/components/LogoGrupoNow";
 import DashboardEmbed from "@/components/DashboardEmbed";
 import { UNIDADES, CORES, type UnidadeId } from "@/config/dashboards";
-import {
-  KPIS_CONSOLIDADOS,
-  RESUMO_UNIDADES,
-  RECEITA_MENSAL,
-  PERIODOS,
-  RECORTE,
-  LEITURA,
-  OBSERVACOES,
-  type Origem,
-  type PeriodoId,
-} from "@/data/mock";
+import { useResumoGrupo } from "@/hooks/useResumoGrupo";
+import { RECEITA_MENSAL, PERIODOS, type PeriodoId } from "@/data/mock";
+import { RECORTE, OBSERVACOES, DETALHES } from "@/data/snapshot";
 
 type View = "overview" | UnidadeId;
-
-const STATUS_COR: Record<string, string> = {
-  bom: CORES.bom,
-  atencao: CORES.atencao,
-  critico: CORES.critico,
-  "sem-dado": "#6F7987",
-};
 
 /** Quem acompanha o portal. Ajuste os cargos se precisar. */
 const DIRETORIA = [
@@ -40,41 +25,68 @@ const DIRETORIA = [
   { nome: "Josivaldo", cargo: "Diretoria", iniciais: "JS" },
 ];
 
-const STATUS_ROTULO: Record<string, string> = {
-  bom: "Saudável",
-  atencao: "Atenção",
-  critico: "Crítico",
-  "sem-dado": "Sem dado anual",
-};
+const brl = (v: number) =>
+  v.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
 
-/**
- * Selo de procedência. O que torna esta tela confiável não é a ausência de
- * lacunas — é o leitor conseguir distinguir, sem perguntar, o que foi lido do
- * painel, o que foi calculado e o que ainda não existe.
- */
-function SeloOrigem({ origem }: { origem: Origem }) {
-  if (origem === "painel") return null;
-  const cfg =
-    origem === "derivado"
-      ? { texto: "derivado", cor: "#8A94A3", borda: "#243040" }
-      : { texto: "sem dado", cor: CORES.atencao, borda: "#3A2F1A" };
-  return (
-    <span
-      className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium"
-      style={{ color: cfg.cor, borderColor: cfg.borda }}
-    >
-      {cfg.texto}
-    </span>
-  );
-}
+const dataHora = (iso: string) =>
+  new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 export default function PortalGrupoNow() {
   const [view, setView] = useState<View>("overview");
   const [periodo, setPeriodo] = useState<PeriodoId>("ano");
   const [menuAberto, setMenuAberto] = useState(false);
   const [telaCheia, setTelaCheia] = useState(false);
+  const resumo = useResumoGrupo();
 
   const unidadeAtiva = UNIDADES.find((u) => u.id === view);
+
+  const fonteNlg = resumo.fontes.find((f) => f.id === "nlgcomex");
+  const fonte4s = resumo.fontes.find((f) => f.id === "pulse4s");
+  const excedeu = resumo.grupo.realizado >= resumo.grupo.meta;
+
+  const kpis = [
+    {
+      id: "grupo",
+      rotulo: "Realizado no ano · grupo",
+      valor: brl(resumo.grupo.realizado),
+      detalhe: excedeu
+        ? `${brl(resumo.grupo.realizado - resumo.grupo.meta)} acima da meta de ${brl(resumo.grupo.meta)}`
+        : `faltam ${brl(resumo.grupo.meta - resumo.grupo.realizado)} de ${brl(resumo.grupo.meta)}`,
+      retrato: resumo.grupo.estado === "retrato",
+    },
+    {
+      id: "nlg",
+      rotulo: "Realizado · NLG Comex",
+      valor: fonteNlg ? brl(fonteNlg.realizadoAno) : "—",
+      detalhe: `média de ${brl(DETALHES.nlgcomex.mediaMensal)}/mês em 8 meses`,
+      retrato: fonteNlg?.estado === "retrato",
+    },
+    {
+      id: "s4",
+      rotulo: "Realizado · Jornada 4S",
+      valor: fonte4s ? brl(fonte4s.realizadoAno) : "—",
+      detalhe: fonte4s
+        ? `faltam ${brl(Math.max(0, fonte4s.metaAno - fonte4s.realizadoAno))} para a meta do ano`
+        : "",
+      retrato: fonte4s?.estado === "retrato",
+    },
+    {
+      id: "ritmo",
+      rotulo: "Run rate necessário · 4S",
+      valor: `${brl(DETALHES.pulse4s.runRate)}/mês`,
+      detalhe: `para fechar a meta nos ${DETALHES.pulse4s.mesesRestantes} meses restantes`,
+      retrato: false,
+    },
+  ];
 
   const navegar = (destino: View) => {
     setView(destino);
@@ -226,24 +238,26 @@ export default function PortalGrupoNow() {
           >
             {view === "overview" ? (
               <div className="mx-auto max-w-6xl p-5 lg:p-8">
-                {/* KPIs consolidados */}
+                {/* Fato bruto — os percentuais ficam nos medidores abaixo */}
                 <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  {KPIS_CONSOLIDADOS.map((k) => (
+                  {kpis.map((k) => (
                     <div
                       key={k.id}
                       className="rounded-xl border border-[#1C242F] bg-[#12171F] p-5"
                     >
                       <div className="mb-3 flex items-start justify-between gap-2">
                         <p className="text-[12px] text-[#8A94A3]">{k.rotulo}</p>
-                        <SeloOrigem origem={k.origem} />
+                        {k.retrato && (
+                          <span className="shrink-0 rounded-full border border-[#3A2F1A] px-2 py-0.5 text-[10px] font-medium text-[#C08A1E]">
+                            retrato
+                          </span>
+                        )}
                       </div>
-                      {k.valor ? (
+                      {resumo.carregando ? (
+                        <div className="mb-2 h-6 w-32 animate-pulse rounded bg-[#1A222C]" />
+                      ) : (
                         <p className="mb-2 whitespace-nowrap text-[24px] font-semibold leading-none tracking-tight tabular-nums">
                           {k.valor}
-                        </p>
-                      ) : (
-                        <p className="mb-2 text-[24px] font-semibold leading-none tracking-tight text-[#3E4855]">
-                          —
                         </p>
                       )}
                       <span className="text-[12px] text-[#6F7987]">
@@ -255,7 +269,7 @@ export default function PortalGrupoNow() {
 
                 {/* Meta anual — a pergunta principal da diretoria */}
                 <section className="mb-6 rounded-xl border border-[#1C242F] bg-[#12171F] p-5 lg:p-6">
-                  <ProgressoMetas />
+                  <ProgressoMetas resumo={resumo} />
                 </section>
 
                 {/* Série mensal da NLG */}
@@ -299,7 +313,9 @@ export default function PortalGrupoNow() {
                 {/* Cartões por empresa */}
                 <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {UNIDADES.map((u) => {
-                    const resumo = RESUMO_UNIDADES.find((r) => r.id === u.id)!;
+                    const fonte = resumo.fontes.find((f) => f.id === u.id);
+                    const det = DETALHES[u.id];
+                    const bateu = fonte ? fonte.progresso >= 100 : false;
                     return (
                       <div
                         key={u.id}
@@ -321,41 +337,59 @@ export default function PortalGrupoNow() {
                               </p>
                             </div>
                           </div>
-                          <span
-                            className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium"
-                            style={{
-                              color: STATUS_COR[resumo.status],
-                              borderColor: `${STATUS_COR[resumo.status]}44`,
-                              background: `${STATUS_COR[resumo.status]}14`,
-                            }}
-                          >
-                            <ShieldCheck size={12} aria-hidden="true" />
-                            {STATUS_ROTULO[resumo.status]}
-                          </span>
+                          {fonte && (
+                            <span
+                              className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium"
+                              style={{
+                                color: bateu ? CORES.bom : CORES.atencao,
+                                borderColor: `${bateu ? CORES.bom : CORES.atencao}44`,
+                                background: `${bateu ? CORES.bom : CORES.atencao}14`,
+                              }}
+                            >
+                              <ShieldCheck size={12} aria-hidden="true" />
+                              {bateu ? "Meta batida" : "Em andamento"}
+                            </span>
+                          )}
                         </div>
 
                         <div className="mb-4 grid grid-cols-3 gap-3">
-                          {resumo.metricas.map((m) => (
-                            <div key={m.rotulo}>
-                              <p className="mb-1 text-[11px] text-[#6F7987]">
-                                {m.rotulo}
-                              </p>
-                              {m.valor ? (
-                                <p className="text-[16px] font-semibold tabular-nums">
-                                  {m.valor}
-                                </p>
-                              ) : (
-                                <p className="text-[16px] font-semibold text-[#3E4855]">
-                                  —
-                                </p>
-                              )}
-                              <SeloOrigem origem={m.origem} />
-                            </div>
-                          ))}
+                          <div>
+                            <p className="mb-1 text-[11px] text-[#6F7987]">
+                              Realizado no ano
+                            </p>
+                            <p className="text-[16px] font-semibold tabular-nums">
+                              {fonte ? brl(fonte.realizadoAno) : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="mb-1 text-[11px] text-[#6F7987]">
+                              Progresso
+                            </p>
+                            <p className="text-[16px] font-semibold tabular-nums">
+                              {fonte
+                                ? `${fonte.progresso.toLocaleString("pt-BR", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}%`
+                                : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="mb-1 text-[11px] text-[#6F7987]">
+                              {u.id === "nlgcomex" ? "Margem" : "Reuniões"}
+                            </p>
+                            <p className="text-[16px] font-semibold tabular-nums">
+                              {u.id === "nlgcomex"
+                                ? DETALHES.nlgcomex.margem
+                                : DETALHES.pulse4s.reunioes}
+                            </p>
+                          </div>
                         </div>
 
                         <p className="mb-4 text-[12px] text-[#8A94A3]">
-                          {resumo.statusTexto}
+                          {u.id === "nlgcomex"
+                            ? `${det ? "Média de " + brl(DETALHES.nlgcomex.mediaMensal) + "/mês" : ""} · ${DETALHES.nlgcomex.mesesRestantes} meses restantes`
+                            : `Precisa de ${brl(DETALHES.pulse4s.runRate)}/mês nos ${DETALHES.pulse4s.mesesRestantes} meses restantes`}
                         </p>
 
                         <button
@@ -383,9 +417,13 @@ export default function PortalGrupoNow() {
                     ))}
                   </ul>
                   <p className="mt-4 border-t border-[#1C242F] pt-3 text-[11px] text-[#5A6472]">
-                    Números lidos dos painéis de origem em {LEITURA.data}, às{" "}
-                    {LEITURA.hora}. Cartões sem selo vêm direto do painel; os
-                    marcados são calculados ou ainda não existem na origem.
+                    {resumo.carregando
+                      ? "Buscando os números nas APIs dos painéis…"
+                      : resumo.temRetrato
+                      ? "Alguma API não respondeu; os cartões marcados como “retrato” mostram a última leitura manual, não o dado de agora."
+                      : `Números buscados ao vivo nas APIs dos painéis. NLG atualizada em ${
+                          fonteNlg ? dataHora(fonteNlg.atualizadoEm) : "—"
+                        }.`}
                   </p>
                 </section>
               </div>

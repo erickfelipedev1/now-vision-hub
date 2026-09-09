@@ -1,4 +1,6 @@
-import { PROGRESSO, PROGRESSO_GRUPO } from "@/data/mock";
+import { RefreshCw } from "lucide-react";
+import type { ResumoGrupo } from "@/hooks/useResumoGrupo";
+import { UNIDADES } from "@/config/dashboards";
 
 /**
  * Realizado contra meta anual, por empresa e no consolidado.
@@ -16,18 +18,26 @@ const brl = (v: number) =>
     maximumFractionDigits: 0,
   });
 
+const pctFmt = (v: number) =>
+  v.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
 function Medidor({
   nome,
   realizado,
   meta,
   cor,
   destaque = false,
+  retrato = false,
 }: {
   nome: string;
   realizado: number;
   meta: number;
   cor: string;
   destaque?: boolean;
+  retrato?: boolean;
 }) {
   const pct = (realizado / meta) * 100;
   // O trilho vai até 100% ou até o realizado, o que for maior — assim quem
@@ -40,22 +50,30 @@ function Medidor({
   return (
     <div className={destaque ? "" : "pt-1"}>
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <span
-          className={`${
-            destaque ? "text-[14px] font-semibold" : "text-[13px]"
-          } text-[#E9EDF2]`}
-        >
-          {nome}
-        </span>
-        <span className="flex items-baseline gap-2">
+        <span className="flex items-center gap-2">
           <span
             className={`${
-              destaque ? "text-[18px]" : "text-[15px]"
-            } font-semibold tabular-nums`}
-            style={{ color: bateu ? "#3E9B62" : "#E9EDF2" }}
+              destaque ? "text-[14px] font-semibold" : "text-[13px]"
+            } text-[#E9EDF2]`}
           >
-            {pct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
+            {nome}
           </span>
+          {retrato && (
+            <span
+              className="rounded-full border border-[#3A2F1A] px-2 py-0.5 text-[10px] font-medium text-[#C08A1E]"
+              title="A API não respondeu; exibindo o último retrato conhecido"
+            >
+              retrato
+            </span>
+          )}
+        </span>
+        <span
+          className={`${
+            destaque ? "text-[18px]" : "text-[15px]"
+          } font-semibold tabular-nums`}
+          style={{ color: bateu ? "#3E9B62" : "#E9EDF2" }}
+        >
+          {pctFmt(pct)}%
         </span>
       </div>
 
@@ -64,8 +82,8 @@ function Medidor({
           destaque ? "h-3" : "h-2.5"
         }`}
         role="img"
-        aria-label={`${nome}: ${brl(realizado)} de ${brl(meta)}, ${pct.toFixed(
-          1
+        aria-label={`${nome}: ${brl(realizado)} de ${brl(meta)}, ${pctFmt(
+          pct
         )} por cento da meta`}
       >
         <div
@@ -93,40 +111,88 @@ function Medidor({
   );
 }
 
-export default function ProgressoMetas() {
+function Esqueleto() {
+  return (
+    <div className="space-y-5">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="animate-pulse">
+          <div className="mb-2 h-3 w-32 rounded bg-[#1A222C]" />
+          <div className="h-2.5 w-full rounded-full bg-[#1A222C]" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function ProgressoMetas({ resumo }: { resumo: ResumoGrupo }) {
+  const { fontes, grupo, carregando, temRetrato, recarregar } = resumo;
+  const excedeu = grupo.realizado >= grupo.meta;
+
   return (
     <div>
-      <div className="mb-5">
-        <h3 className="text-[15px] font-semibold text-[#E9EDF2]">
-          Realizado contra a meta anual
-        </h3>
-        <p className="text-[13px] text-[#8A94A3]">
-          O grupo fecha o ano a {brl(PROGRESSO_GRUPO.meta - PROGRESSO_GRUPO.realizado)}{" "}
-          da meta
-        </p>
-      </div>
-
-      <div className="mb-5 border-b border-[#1C242F] pb-5">
-        <Medidor
-          nome="Grupo Now"
-          realizado={PROGRESSO_GRUPO.realizado}
-          meta={PROGRESSO_GRUPO.meta}
-          cor="#B8862B"
-          destaque
-        />
-      </div>
-
-      <div className="space-y-4">
-        {PROGRESSO.map((p) => (
-          <Medidor
-            key={p.id}
-            nome={p.nome}
-            realizado={p.realizado}
-            meta={p.meta}
-            cor={p.cor}
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[15px] font-semibold text-[#E9EDF2]">
+            Realizado contra a meta anual
+          </h3>
+          <p className="text-[13px] text-[#8A94A3]">
+            {carregando
+              ? "Buscando nos painéis…"
+              : excedeu
+                ? `O grupo passou a meta do ano em ${brl(
+                    grupo.realizado - grupo.meta
+                  )}`
+                : `Faltam ${brl(
+                    grupo.meta - grupo.realizado
+                  )} para o grupo bater a meta do ano`}
+          </p>
+        </div>
+        <button
+          onClick={recarregar}
+          disabled={carregando}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#1C242F] px-2.5 py-1.5 text-[12px] text-[#8A94A3] transition-colors hover:text-[#E9EDF2] disabled:opacity-50"
+        >
+          <RefreshCw
+            size={13}
+            aria-hidden="true"
+            className={carregando ? "animate-spin" : ""}
           />
-        ))}
+          Atualizar
+        </button>
       </div>
+
+      {carregando ? (
+        <Esqueleto />
+      ) : (
+        <>
+          <div className="mb-5 border-b border-[#1C242F] pb-5">
+            <Medidor
+              nome="Grupo Now"
+              realizado={grupo.realizado}
+              meta={grupo.meta}
+              cor="#B8862B"
+              destaque
+              retrato={temRetrato}
+            />
+          </div>
+
+          <div className="space-y-4">
+            {fontes.map((f) => {
+              const u = UNIDADES.find((x) => x.id === f.id);
+              return (
+                <Medidor
+                  key={f.id}
+                  nome={u?.nome ?? f.id}
+                  realizado={f.realizadoAno}
+                  meta={f.metaAno}
+                  cor={u?.cor ?? "#8A94A3"}
+                  retrato={f.estado === "retrato"}
+                />
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
