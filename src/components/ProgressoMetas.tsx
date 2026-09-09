@@ -111,40 +111,88 @@ function Medidor({
   );
 }
 
-export default function ProgressoMetas() {
+function Esqueleto() {
+  return (
+    <div className="space-y-5">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="animate-pulse">
+          <div className="mb-2 h-3 w-32 rounded bg-[#1A222C]" />
+          <div className="h-2.5 w-full rounded-full bg-[#1A222C]" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function ProgressoMetas({ resumo }: { resumo: ResumoGrupo }) {
+  const { fontes, grupo, carregando, temRetrato, recarregar } = resumo;
+  const excedeu = grupo.realizado >= grupo.meta;
+
   return (
     <div>
-      <div className="mb-5">
-        <h3 className="text-[15px] font-semibold text-[#E9EDF2]">
-          Realizado contra a meta anual
-        </h3>
-        <p className="text-[13px] text-[#8A94A3]">
-          O grupo fecha o ano a {brl(PROGRESSO_GRUPO.meta - PROGRESSO_GRUPO.realizado)}{" "}
-          da meta
-        </p>
-      </div>
-
-      <div className="mb-5 border-b border-[#1C242F] pb-5">
-        <Medidor
-          nome="Grupo Now"
-          realizado={PROGRESSO_GRUPO.realizado}
-          meta={PROGRESSO_GRUPO.meta}
-          cor="#B8862B"
-          destaque
-        />
-      </div>
-
-      <div className="space-y-4">
-        {PROGRESSO.map((p) => (
-          <Medidor
-            key={p.id}
-            nome={p.nome}
-            realizado={p.realizado}
-            meta={p.meta}
-            cor={p.cor}
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[15px] font-semibold text-[#E9EDF2]">
+            Realizado contra a meta anual
+          </h3>
+          <p className="text-[13px] text-[#8A94A3]">
+            {carregando
+              ? "Buscando nos painéis…"
+              : excedeu
+                ? `O grupo passou a meta do ano em ${brl(
+                    grupo.realizado - grupo.meta
+                  )}`
+                : `Faltam ${brl(
+                    grupo.meta - grupo.realizado
+                  )} para o grupo bater a meta do ano`}
+          </p>
+        </div>
+        <button
+          onClick={recarregar}
+          disabled={carregando}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#1C242F] px-2.5 py-1.5 text-[12px] text-[#8A94A3] transition-colors hover:text-[#E9EDF2] disabled:opacity-50"
+        >
+          <RefreshCw
+            size={13}
+            aria-hidden="true"
+            className={carregando ? "animate-spin" : ""}
           />
-        ))}
+          Atualizar
+        </button>
       </div>
+
+      {carregando ? (
+        <Esqueleto />
+      ) : (
+        <>
+          <div className="mb-5 border-b border-[#1C242F] pb-5">
+            <Medidor
+              nome="Grupo Now"
+              realizado={grupo.realizado}
+              meta={grupo.meta}
+              cor="#B8862B"
+              destaque
+              retrato={temRetrato}
+            />
+          </div>
+
+          <div className="space-y-4">
+            {fontes.map((f) => {
+              const u = UNIDADES.find((x) => x.id === f.id);
+              return (
+                <Medidor
+                  key={f.id}
+                  nome={u?.nome ?? f.id}
+                  realizado={f.realizadoAno}
+                  meta={f.metaAno}
+                  cor={u?.cor ?? "#8A94A3"}
+                  retrato={f.estado === "retrato"}
+                />
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
