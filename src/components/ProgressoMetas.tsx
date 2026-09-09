@@ -50,22 +50,30 @@ function Medidor({
   return (
     <div className={destaque ? "" : "pt-1"}>
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <span
-          className={`${
-            destaque ? "text-[14px] font-semibold" : "text-[13px]"
-          } text-[#E9EDF2]`}
-        >
-          {nome}
-        </span>
-        <span className="flex items-baseline gap-2">
+        <span className="flex items-center gap-2">
           <span
             className={`${
-              destaque ? "text-[18px]" : "text-[15px]"
-            } font-semibold tabular-nums`}
-            style={{ color: bateu ? "#3E9B62" : "#E9EDF2" }}
+              destaque ? "text-[14px] font-semibold" : "text-[13px]"
+            } text-[#E9EDF2]`}
           >
-            {pct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
+            {nome}
           </span>
+          {retrato && (
+            <span
+              className="rounded-full border border-[#3A2F1A] px-2 py-0.5 text-[10px] font-medium text-[#C08A1E]"
+              title="A API não respondeu; exibindo o último retrato conhecido"
+            >
+              retrato
+            </span>
+          )}
+        </span>
+        <span
+          className={`${
+            destaque ? "text-[18px]" : "text-[15px]"
+          } font-semibold tabular-nums`}
+          style={{ color: bateu ? "#3E9B62" : "#E9EDF2" }}
+        >
+          {pctFmt(pct)}%
         </span>
       </div>
 
