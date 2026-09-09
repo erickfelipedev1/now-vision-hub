@@ -56,7 +56,7 @@ interface PainelNLG {
 }
 
 async function buscarNLG(signal?: AbortSignal): Promise<ResumoFonte> {
-  const r = await fetch(ENDPOINTS.nlgcomex, { signal });
+  const r = await fetch(ENDPOINTS.nlgcomex, { signal: signal ?? null });
   if (!r.ok) throw new Error(`NLG respondeu ${r.status}`);
   const j: PainelNLG = await r.json();
   return {
@@ -80,7 +80,7 @@ interface ResumoAPI {
 }
 
 async function buscar4S(signal?: AbortSignal): Promise<ResumoFonte> {
-  const r = await fetch(ENDPOINTS.pulse4s, { signal });
+  const r = await fetch(ENDPOINTS.pulse4s, { signal: signal ?? null });
   if (!r.ok) throw new Error(`4S respondeu ${r.status}`);
   const j: ResumoAPI = await r.json();
   return {
@@ -103,7 +103,7 @@ function doRetrato(id: UnidadeId): ResumoFonte {
     metaAno: s.metaAno,
     progresso: (s.realizadoAno / s.metaAno) * 100,
     atualizadoEm: SNAPSHOT.lidoEm,
-    progressoMensal: s.progressoMensal,
+    progressoMensal: s.progressoMensal ? [...s.progressoMensal] : undefined,
     estado: "retrato",
   };
 }
