@@ -1,4 +1,6 @@
-import { PROGRESSO, PROGRESSO_GRUPO } from "@/data/mock";
+import { RefreshCw } from "lucide-react";
+import type { ResumoGrupo } from "@/hooks/useResumoGrupo";
+import { UNIDADES } from "@/config/dashboards";
 
 /**
  * Realizado contra meta anual, por empresa e no consolidado.
@@ -16,18 +18,26 @@ const brl = (v: number) =>
     maximumFractionDigits: 0,
   });
 
+const pctFmt = (v: number) =>
+  v.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
 function Medidor({
   nome,
   realizado,
   meta,
   cor,
   destaque = false,
+  retrato = false,
 }: {
   nome: string;
   realizado: number;
   meta: number;
   cor: string;
   destaque?: boolean;
+  retrato?: boolean;
 }) {
   const pct = (realizado / meta) * 100;
   // O trilho vai até 100% ou até o realizado, o que for maior — assim quem
@@ -64,8 +74,8 @@ function Medidor({
           destaque ? "h-3" : "h-2.5"
         }`}
         role="img"
-        aria-label={`${nome}: ${brl(realizado)} de ${brl(meta)}, ${pct.toFixed(
-          1
+        aria-label={`${nome}: ${brl(realizado)} de ${brl(meta)}, ${pctFmt(
+          pct
         )} por cento da meta`}
       >
         <div
