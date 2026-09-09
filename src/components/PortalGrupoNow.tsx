@@ -29,7 +29,8 @@ const brl = (v: number) =>
   v.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 
 const dataHora = (iso: string) =>
