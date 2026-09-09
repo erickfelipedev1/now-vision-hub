@@ -103,7 +103,7 @@ function doRetrato(id: UnidadeId): ResumoFonte {
     metaAno: s.metaAno,
     progresso: (s.realizadoAno / s.metaAno) * 100,
     atualizadoEm: SNAPSHOT.lidoEm,
-    progressoMensal: s.progressoMensal ? [...s.progressoMensal] : undefined,
+    ...(s.progressoMensal ? { progressoMensal: [...s.progressoMensal] } : {}),
     estado: "retrato",
   };
 }
