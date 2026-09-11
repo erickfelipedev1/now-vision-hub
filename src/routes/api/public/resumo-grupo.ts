@@ -102,11 +102,13 @@ function separarCsv(linha: string, delimitador: string): string[] {
 function registrosCsvMicrovix(texto: string): RegistroMicrovix[] {
   const linhas = texto.replace(/^\uFEFF/, "").split(/\r?\n/).filter((linha) => linha.trim());
   if (linhas.length < 2) return [];
+  const primeiraLinha = linhas[0];
+  if (!primeiraLinha) return [];
   const delimitadores = ["|", ";", "\t", ","];
   const delimitador = delimitadores.reduce((melhor, atual) =>
-    linhas[0].split(atual).length > linhas[0].split(melhor).length ? atual : melhor,
+    primeiraLinha.split(atual).length > primeiraLinha.split(melhor).length ? atual : melhor,
   );
-  const cabecalho = separarCsv(linhas[0], delimitador).map((item) => item.trim());
+  const cabecalho = separarCsv(primeiraLinha, delimitador).map((item) => item.trim());
   if (!cabecalho.some((item) => item.toLowerCase() === "valor_total")) return [];
   return linhas.slice(1).map((linha) => {
     const valores = separarCsv(linha, delimitador);
