@@ -166,11 +166,37 @@ async function buscarLojaWon(cnpj: string): Promise<number> {
     });
     if (!r.ok) throw new Error(`Microvix respondeu ${r.status} para ${cnpj}`);
     const resposta = await r.text();
-    const registros = resposta.trimStart().startsWith("<")
-      ? registrosMicrovix(parser.parse(resposta))
-      : registrosCsvMicrovix(resposta);
-    if (registros.length === 0) break;
 
+    let registros: RegistroMicrovix[];
+    if (resposta.trimStart().startsWith("<")) {
+      const xml = parser.parse(resposta);
+      const status = statusMicrovix(xml);
+      console.log(
+        `[resumo-grupo][WON] CNPJ ${cnpj} pág. ${pagina + 1}: ResponseSuccess=${status.success ?? "n/a"} Message=${status.message ?? "n/a"}`,
+      );
+      if (status.success === false) {
+        throw new Error(
+          `Microvix recusou ${cnpj}: ${status.message ?? "ResponseSuccess=False"}`,
+        );
+      }
+      registros = registrosMicrovix(xml);
+    } else {
+      if (!cabecalhoCsvValido(resposta)) {
+        const amostra = resposta.slice(0, 200).replace(/\s+/g, " ").trim();
+        throw new Error(
+          `Formato inesperado do Microvix para ${cnpj}: "${amostra}"`,
+        );
+      }
+      registros = registrosCsvMicrovix(resposta);
+    }
+    if (registros.length === 0) {
+      console.log(
+        `[resumo-grupo][WON] CNPJ ${cnpj} pág. ${pagina + 1}: 0 linhas — fim da paginação`,
+      );
+      break;
+    }
+
+    let validas = 0;
     let maiorTimestamp = timestamp;
     for (const registro of registros) {
       const cancelado = String(campo(registro, "cancelado") ?? "").toUpperCase();
@@ -178,16 +204,60 @@ async function buscarLojaWon(cnpj: string): Promise<number> {
       const tipo = String(campo(registro, "tipo_transacao") ?? "").toUpperCase();
       if (cancelado === "N" && excluido === "N" && tipo === "V") {
         total += numero(campo(registro, "valor_total"));
+        validas += 1;
       }
       const atual = String(campo(registro, "timestamp") ?? "");
       if (atual && BigInt(atual) > BigInt(maiorTimestamp)) maiorTimestamp = atual;
     }
+    console.log(
+      `[resumo-grupo][WON] CNPJ ${cnpj} pág. ${pagina + 1}: ${registros.length} linhas, ${validas} vendas válidas após filtro`,
+    );
     if (maiorTimestamp === timestamp) {
       throw new Error(`Paginação do Microvix não avançou para ${cnpj}`);
     }
     timestamp = maiorTimestamp;
   }
+  console.log(`[resumo-grupo][WON] CNPJ ${cnpj}: total vendas = R$ ${total.toFixed(2)}`);
   return total;
+}
+
+/** Procura ResponseSuccess/Message em qualquer nível do XML da Microvix. */
+function statusMicrovix(xml: unknown): {
+  success?: boolean;
+  message?: string;
+} {
+  let success: boolean | undefined;
+  let message: string | undefined;
+  const visitar = (no: unknown) => {
+    if (Array.isArray(no)) {
+      no.forEach(visitar);
+      return;
+    }
+    if (!no || typeof no !== "object") return;
+    for (const [chave, valor] of Object.entries(no as Record<string, unknown>)) {
+      const nome = chave.toLowerCase().replace(/^@_/, "");
+      if (nome === "responsesuccess") {
+        success = String(valor).toLowerCase() === "true";
+      } else if (nome === "message" || nome === "responsemessage") {
+        message = String(valor);
+      } else if (valor && typeof valor === "object") {
+        visitar(valor);
+      }
+    }
+  };
+  visitar(xml);
+  return { success, message };
+}
+
+/** CSV só é confiável se o cabeçalho tem as colunas esperadas. */
+function cabecalhoCsvValido(texto: string): boolean {
+  const primeira = texto
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .find((linha) => linha.trim());
+  if (!primeira) return false;
+  const colunas = primeira.toLowerCase();
+  return colunas.includes("valor_total") && colunas.includes("timestamp");
 }
 
 async function buscarWON() {
