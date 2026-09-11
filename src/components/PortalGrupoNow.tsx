@@ -363,11 +363,7 @@ export default function PortalGrupoNow() {
                               Realizado no ano
                             </p>
                             <p className="text-[16px] font-semibold tabular-nums">
-                              {u.pendente
-                                ? "—"
-                                : fonte
-                                  ? brl(fonte.realizadoAno)
-                                  : "—"}
+                              {fonte ? brl(fonte.realizadoAno) : "—"}
                             </p>
                           </div>
                           <div>
@@ -375,15 +371,15 @@ export default function PortalGrupoNow() {
                               Progresso
                             </p>
                             <p className="text-[16px] font-semibold tabular-nums">
-                               {u.pendente
-                                ? "—"
-                                : fonte
-                                 ? fonte.progresso === undefined
-                                   ? "sem meta"
-                                   : `${fonte.progresso.toLocaleString("pt-BR", {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })}%`
+                              {fonte
+                                ? fonte.metaAno === undefined
+                                  ? "sem meta"
+                                  : fonte.progresso === undefined
+                                    ? "—"
+                                    : `${fonte.progresso.toLocaleString("pt-BR", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}%`
                                 : "—"}
                             </p>
                           </div>
