@@ -116,13 +116,13 @@ async function lerPulse4S(): Promise<Linha> {
     const r = await fetch(url, { headers: { accept: "application/json" } });
     if (!r.ok) throw new Error(String(r.status));
     const j = (await r.json()) as {
-      dados?: Array<{
+      rows?: Array<{
         bloco?: string;
         nome?: string;
         faturamento?: number | string;
       }>;
     };
-    const itens = Array.isArray(j.dados) ? j.dados : [];
+    const itens = Array.isArray(j.rows) ? j.rows : [];
     const resumo = itens.filter((i) => i.bloco === "Resumo");
     const realizadoItem = resumo.find((i) => i.nome === "Faturado no ano");
     const metaItem = resumo.find((i) => i.nome === "Meta do ano");
