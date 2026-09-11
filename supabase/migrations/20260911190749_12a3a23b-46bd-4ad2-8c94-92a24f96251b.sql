@@ -1,0 +1,1 @@
+UPDATE public.resumo_grupo SET meta_ano = 2000000 WHERE empresa = 'won';

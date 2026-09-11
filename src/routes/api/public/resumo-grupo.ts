@@ -269,7 +269,8 @@ async function buscarWON() {
     empresa: "won",
     nome: "WON",
     realizado_ano: totais.reduce((soma, valor) => soma + valor, 0),
-    meta_ano: null,
+    /* meta_ano propositalmente fora do upsert: a meta da WON é configurada
+       direto na tabela e a atualização não pode apagá-la. */
     fonte: "Linx Microvix",
     atualizado_em: new Date().toISOString(),
   };
