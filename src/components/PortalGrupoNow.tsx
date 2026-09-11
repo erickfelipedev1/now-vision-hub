@@ -76,9 +76,11 @@ export default function PortalGrupoNow() {
       id: "s4",
       rotulo: "Realizado · Jornada 4S",
       valor: fonte4s ? brl(fonte4s.realizadoAno) : "—",
-      detalhe: fonte4s
+      detalhe: fonte4s?.metaAno !== undefined
         ? `faltam ${brl(Math.max(0, fonte4s.metaAno - fonte4s.realizadoAno))} para a meta do ano`
-        : "",
+        : fonte4s
+          ? "meta anual ainda não definida"
+          : "",
       retrato: fonte4s?.estado === "retrato",
     },
     {
@@ -316,7 +318,9 @@ export default function PortalGrupoNow() {
                 <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {UNIDADES.map((u) => {
                     const fonte = resumo.fontes.find((f) => f.id === u.id);
-                    const bateu = fonte ? fonte.progresso >= 100 : false;
+                    const bateu = (fonte?.progresso ?? 0) >= 100;
+                    const semMeta = fonte !== undefined && fonte.metaAno === undefined;
+                    const semPainel = u.pendente || u.semPainel;
                     return (
                       <div
                         key={u.id}
@@ -348,7 +352,7 @@ export default function PortalGrupoNow() {
                               }}
                             >
                               <ShieldCheck size={12} aria-hidden="true" />
-                              {bateu ? "Meta batida" : "Em andamento"}
+                              {semMeta ? "Sem meta" : bateu ? "Meta batida" : "Em andamento"}
                             </span>
                           )}
                         </div>
@@ -371,10 +375,12 @@ export default function PortalGrupoNow() {
                               Progresso
                             </p>
                             <p className="text-[16px] font-semibold tabular-nums">
-                              {u.pendente
+                               {u.pendente
                                 ? "—"
                                 : fonte
-                                ? `${fonte.progresso.toLocaleString("pt-BR", {
+                                 ? fonte.progresso === undefined
+                                   ? "sem meta"
+                                   : `${fonte.progresso.toLocaleString("pt-BR", {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2,
                                   })}%`
@@ -385,16 +391,20 @@ export default function PortalGrupoNow() {
                             <p className="mb-1 text-[11px] text-[#6F7987]">
                               {u.pendente
                                 ? "Status"
-                                : u.id === "nlgcomex"
+                                 : u.id === "nlgcomex"
                                   ? "Margem"
-                                  : "Reuniões"}
+                                   : u.id === "pulse4s"
+                                     ? "Reuniões"
+                                     : "Fonte"}
                             </p>
                             <p className="text-[16px] font-semibold tabular-nums">
                               {u.pendente
                                 ? "Pendente"
-                                : u.id === "nlgcomex"
+                                 : u.id === "nlgcomex"
                                 ? DETALHES.nlgcomex.margem
-                                : DETALHES.pulse4s.reunioes}
+                                 : u.id === "pulse4s"
+                                   ? DETALHES.pulse4s.reunioes
+                                   : "Microvix"}
                             </p>
                           </div>
                         </div>
@@ -402,16 +412,18 @@ export default function PortalGrupoNow() {
                         <p className="mb-4 text-[12px] text-[#8A94A3]">
                           {u.pendente
                             ? "Aguardando integração de dados."
-                            : u.id === "nlgcomex"
+                             : u.id === "nlgcomex"
                             ? `Média de ${brl(DETALHES.nlgcomex.mediaMensal)}/mês · ${DETALHES.nlgcomex.mesesRestantes} meses restantes`
-                            : `Precisa de ${brl(DETALHES.pulse4s.runRate)}/mês nos ${DETALHES.pulse4s.mesesRestantes} meses restantes`}
+                             : u.id === "pulse4s"
+                               ? `Precisa de ${brl(DETALHES.pulse4s.runRate)}/mês nos ${DETALHES.pulse4s.mesesRestantes} meses restantes`
+                               : "Realizado consolidado das três lojas · meta anual ainda não definida"}
                         </p>
 
                         <button
                           onClick={() => navegar(u.id)}
                           className="mt-auto flex items-center justify-center gap-1.5 rounded-lg border border-[#243040] bg-[#16202C] px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-[#1C2635]"
                         >
-                          {u.pendente ? "Ver detalhes" : "Abrir dashboard completo"}
+                           {semPainel ? "Ver detalhes" : "Abrir dashboard completo"}
                           <ArrowUpRight size={15} aria-hidden="true" />
                         </button>
                       </div>
@@ -444,7 +456,7 @@ export default function PortalGrupoNow() {
               </div>
             ) : (
               unidadeAtiva &&
-              (unidadeAtiva.pendente ? (
+               (unidadeAtiva.pendente || unidadeAtiva.semPainel ? (
                 <section className="flex h-full items-center justify-center px-6 py-12 text-center">
                   <div className="max-w-xl">
                     <div

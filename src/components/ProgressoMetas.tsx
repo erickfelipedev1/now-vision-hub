@@ -35,11 +35,27 @@ function Medidor({
 }: {
   nome: string;
   realizado: number;
-  meta: number;
+  meta?: number;
   cor: string;
   destaque?: boolean;
   retrato?: boolean;
 }) {
+  if (meta === undefined || meta <= 0) {
+    return (
+      <div className={destaque ? "" : "pt-1"}>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[13px] text-[#E9EDF2]">{nome}</span>
+          <span className="rounded-full border border-[#38414D] px-2 py-0.5 text-[10px] font-medium text-[#8A94A3]">
+            sem meta
+          </span>
+        </div>
+        <p className="mt-2 text-[15px] font-semibold tabular-nums text-[#E9EDF2]">
+          {brl(realizado)}
+        </p>
+      </div>
+    );
+  }
+
   const pct = (realizado / meta) * 100;
   // O trilho vai até 100% ou até o realizado, o que for maior — assim quem
   // passou da meta mostra o excedente em vez de encostar na borda.
@@ -185,7 +201,7 @@ export default function ProgressoMetas({ resumo }: { resumo: ResumoGrupo }) {
                   key={f.id}
                   nome={u?.nome ?? f.id}
                   realizado={f.realizadoAno}
-                  meta={f.metaAno}
+                  {...(f.metaAno !== undefined ? { meta: f.metaAno } : {})}
                   cor={u?.cor ?? "#8A94A3"}
                   retrato={f.estado === "retrato"}
                 />

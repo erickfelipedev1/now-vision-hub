@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { XMLParser } from "fast-xml-parser";
 
 const URL_NLG = "https://groupnow-nlgcomex.lovable.app/api/public/painel";
 const URL_4S =
   "https://clint-pulse.lovable.app/api/public/diretoria?token=bedfd9d8152959d162a4e0163b77240d5e9bd709aad73f90&format=json";
+const URL_MICROVIX = "https://webapi.microvix.com.br/1.0/api/integracao";
+const CNPJS_WON = ["26051048000112", "30454662000100", "51334648000135"];
+const LIMITE_PAGINAS_MICROVIX = 500;
 
 const ORIGENS_PERMITIDAS = [
   "https://now-vision-hub.lovable.app",
@@ -25,12 +29,177 @@ function corsHeaders(req: Request): Record<string, string> {
 function numero(v: unknown): number {
   if (typeof v === "number" && Number.isFinite(v)) return v;
   if (typeof v === "string") {
-    const n = Number(
-      v.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", "."),
-    );
+    const limpo = v.replace(/[^\d,.-]/g, "");
+    const temVirgula = limpo.includes(",");
+    const normalizado = temVirgula
+      ? limpo.replace(/\./g, "").replace(",", ".")
+      : limpo;
+    const n = Number(normalizado);
     return Number.isFinite(n) ? n : 0;
   }
   return 0;
+}
+
+function escaparXml(valor: string): string {
+  return valor
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+function dataIsoLocal(data: Date): string {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+type RegistroMicrovix = Record<string, unknown>;
+
+function registrosMicrovix(valor: unknown): RegistroMicrovix[] {
+  const encontrados: RegistroMicrovix[] = [];
+  const visitar = (no: unknown) => {
+    if (Array.isArray(no)) {
+      no.forEach(visitar);
+      return;
+    }
+    if (!no || typeof no !== "object") return;
+    const objeto = no as RegistroMicrovix;
+    const chaves = Object.keys(objeto).map((chave) => chave.toLowerCase());
+    if (chaves.includes("timestamp") && chaves.includes("valor_total")) {
+      encontrados.push(objeto);
+      return;
+    }
+    Object.values(objeto).forEach(visitar);
+  };
+  visitar(valor);
+  return encontrados;
+}
+
+function separarCsv(linha: string, delimitador: string): string[] {
+  const campos: string[] = [];
+  let atual = "";
+  let aspas = false;
+  for (let indice = 0; indice < linha.length; indice += 1) {
+    const caractere = linha[indice];
+    if (caractere === '"') {
+      if (aspas && linha[indice + 1] === '"') {
+        atual += '"';
+        indice += 1;
+      } else {
+        aspas = !aspas;
+      }
+    } else if (caractere === delimitador && !aspas) {
+      campos.push(atual.trim());
+      atual = "";
+    } else {
+      atual += caractere;
+    }
+  }
+  campos.push(atual.trim());
+  return campos;
+}
+
+function registrosCsvMicrovix(texto: string): RegistroMicrovix[] {
+  const linhas = texto.replace(/^\uFEFF/, "").split(/\r?\n/).filter((linha) => linha.trim());
+  if (linhas.length < 2) return [];
+  const primeiraLinha = linhas[0];
+  if (!primeiraLinha) return [];
+  const delimitadores = ["|", ";", "\t", ","];
+  const delimitador = delimitadores.reduce((melhor, atual) =>
+    primeiraLinha.split(atual).length > primeiraLinha.split(melhor).length ? atual : melhor,
+  );
+  const cabecalho = separarCsv(primeiraLinha, delimitador).map((item) => item.trim());
+  if (!cabecalho.some((item) => item.toLowerCase() === "valor_total")) return [];
+  return linhas.slice(1).map((linha) => {
+    const valores = separarCsv(linha, delimitador);
+    return Object.fromEntries(cabecalho.map((nome, indice) => [nome, valores[indice] ?? ""]));
+  });
+}
+
+function campo(registro: RegistroMicrovix, nome: string): unknown {
+  const chave = Object.keys(registro).find(
+    (item) => item.toLowerCase() === nome.toLowerCase(),
+  );
+  return chave ? registro[chave] : undefined;
+}
+
+async function buscarLojaWon(cnpj: string): Promise<number> {
+  const chave = process.env["MICROVIX_CHAVE"];
+  const usuario = process.env["MICROVIX_USER"];
+  const senha = process.env["MICROVIX_PASSWORD"];
+  if (!chave || !usuario || !senha) {
+    throw new Error("Credenciais do Linx Microvix não configuradas");
+  }
+
+  const hoje = new Date();
+  const inicio = `${hoje.getFullYear()}-01-01`;
+  const fim = dataIsoLocal(hoje);
+  const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
+  let timestamp = "0";
+  let total = 0;
+
+  for (let pagina = 0; pagina < LIMITE_PAGINAS_MICROVIX; pagina += 1) {
+    const xml = `<?xml version="1.0" encoding="utf-8"?>
+<LinxMicrovix>
+  <Authentication user="${escaparXml(usuario)}" password="${escaparXml(senha)}" />
+  <ResponseFormat>csv</ResponseFormat>
+  <Command>
+    <Name>LinxMovimento</Name>
+    <Parameters>
+      <Parameter id="chave">${escaparXml(chave)}</Parameter>
+      <Parameter id="cnpjEmp">${cnpj}</Parameter>
+      <Parameter id="data_inicial">${inicio}</Parameter>
+      <Parameter id="data_fim">${fim}</Parameter>
+      <Parameter id="operacao">S</Parameter>
+      <Parameter id="timestamp">${escaparXml(timestamp)}</Parameter>
+    </Parameters>
+  </Command>
+</LinxMicrovix>`;
+    const r = await fetch(URL_MICROVIX, {
+      method: "POST",
+      headers: { "Content-Type": "application/xml; charset=utf-8" },
+      body: xml,
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!r.ok) throw new Error(`Microvix respondeu ${r.status} para ${cnpj}`);
+    const resposta = await r.text();
+    const registros = resposta.trimStart().startsWith("<")
+      ? registrosMicrovix(parser.parse(resposta))
+      : registrosCsvMicrovix(resposta);
+    if (registros.length === 0) break;
+
+    let maiorTimestamp = timestamp;
+    for (const registro of registros) {
+      const cancelado = String(campo(registro, "cancelado") ?? "").toUpperCase();
+      const excluido = String(campo(registro, "excluido") ?? "").toUpperCase();
+      const tipo = String(campo(registro, "tipo_transacao") ?? "").toUpperCase();
+      if (cancelado === "N" && excluido === "N" && tipo === "V") {
+        total += numero(campo(registro, "valor_total"));
+      }
+      const atual = String(campo(registro, "timestamp") ?? "");
+      if (atual && BigInt(atual) > BigInt(maiorTimestamp)) maiorTimestamp = atual;
+    }
+    if (maiorTimestamp === timestamp) {
+      throw new Error(`Paginação do Microvix não avançou para ${cnpj}`);
+    }
+    timestamp = maiorTimestamp;
+  }
+  return total;
+}
+
+async function buscarWON() {
+  const totais = await Promise.all(CNPJS_WON.map(buscarLojaWon));
+  return {
+    empresa: "won",
+    nome: "WON",
+    realizado_ano: totais.reduce((soma, valor) => soma + valor, 0),
+    meta_ano: null,
+    fonte: "Linx Microvix",
+    atualizado_em: new Date().toISOString(),
+  };
 }
 
 /* NLG: painel público já existente — fetch servidor a servidor, sem CORS. */
@@ -79,14 +248,14 @@ async function buscar4S() {
 }
 
 async function atualizarResumo() {
-  const [nlg, s4] = await Promise.all([buscarNLG(), buscar4S()]);
+  const [nlg, s4, won] = await Promise.all([buscarNLG(), buscar4S(), buscarWON()]);
 
   const { supabaseAdmin } = await import(
     "@/integrations/supabase/client.server"
   );
   const { data, error } = await supabaseAdmin
     .from("resumo_grupo")
-    .upsert([nlg.row, s4], { onConflict: "empresa" })
+    .upsert([nlg.row, s4, won], { onConflict: "empresa" })
     .select();
 
   if (error) throw new Error(error.message);
