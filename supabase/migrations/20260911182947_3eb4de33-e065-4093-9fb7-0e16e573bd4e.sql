@@ -1,0 +1,1 @@
+ALTER TABLE public.resumo_grupo ALTER COLUMN meta_ano DROP NOT NULL;
