@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicResumoGrupoRouteImport } from './routes/api/public/resumo-grupo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicResumoGrupoRoute = ApiPublicResumoGrupoRouteImport.update({
+  id: '/api/public/resumo-grupo',
+  path: '/api/public/resumo-grupo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/resumo-grupo': typeof ApiPublicResumoGrupoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/resumo-grupo': typeof ApiPublicResumoGrupoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/resumo-grupo': typeof ApiPublicResumoGrupoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/resumo-grupo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/resumo-grupo'
+  id: '__root__' | '/' | '/api/public/resumo-grupo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicResumoGrupoRoute: typeof ApiPublicResumoGrupoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/resumo-grupo': {
+      id: '/api/public/resumo-grupo'
+      path: '/api/public/resumo-grupo'
+      fullPath: '/api/public/resumo-grupo'
+      preLoaderRoute: typeof ApiPublicResumoGrupoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicResumoGrupoRoute: ApiPublicResumoGrupoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
