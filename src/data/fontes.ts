@@ -11,18 +11,18 @@
  */
 
 import { SNAPSHOT } from "@/data/snapshot";
+import type { UnidadeId } from "@/config/dashboards";
 
 /** Rota do próprio portal — servidor a servidor com os painéis. */
 export const ENDPOINT_RESUMO = "/api/public/resumo-grupo";
 
-export type UnidadeId = "nlgcomex" | "pulse4s";
 export type EstadoFonte = "ao-vivo" | "retrato" | "carregando";
 
 export interface ResumoFonte {
   id: UnidadeId;
   realizadoAno: number;
-  metaAno: number;
-  progresso: number;
+  metaAno?: number;
+  progresso?: number;
   /** ISO. Quando vem do retrato, é a data da leitura manual. */
   atualizadoEm: string;
   estado: EstadoFonte;
@@ -34,7 +34,7 @@ interface LinhaResumo {
   empresa: string;
   nome: string;
   realizado_ano: number;
-  meta_ano: number;
+  meta_ano: number | null;
   fonte: string;
   atualizado_em: string;
   progressoMensal?: number[];
@@ -47,7 +47,7 @@ interface RespostaResumo {
   erro?: string;
 }
 
-function doRetrato(id: UnidadeId): ResumoFonte {
+function doRetrato(id: "nlgcomex" | "pulse4s"): ResumoFonte {
   const s = SNAPSHOT[id];
   return {
     id,
@@ -61,12 +61,19 @@ function doRetrato(id: UnidadeId): ResumoFonte {
 }
 
 function daLinha(l: LinhaResumo): ResumoFonte | null {
-  if (l.empresa !== "nlgcomex" && l.empresa !== "pulse4s") return null;
+  if (
+    l.empresa !== "nlgcomex" &&
+    l.empresa !== "pulse4s" &&
+    l.empresa !== "won"
+  ) return null;
+  const metaAno = l.meta_ano ?? undefined;
   return {
     id: l.empresa,
     realizadoAno: l.realizado_ano,
-    metaAno: l.meta_ano,
-    progresso: l.meta_ano > 0 ? (l.realizado_ano / l.meta_ano) * 100 : 0,
+    ...(metaAno !== undefined ? { metaAno } : {}),
+    ...(metaAno !== undefined && metaAno > 0
+      ? { progresso: (l.realizado_ano / metaAno) * 100 }
+      : {}),
     atualizadoEm: l.atualizado_em,
     ...(l.progressoMensal ? { progressoMensal: l.progressoMensal } : {}),
     estado: "ao-vivo",
@@ -97,17 +104,18 @@ export async function buscarResumos(
 
   const nlg = linhas.find((l) => l.id === "nlgcomex") ?? doRetrato("nlgcomex");
   const s4 = linhas.find((l) => l.id === "pulse4s") ?? doRetrato("pulse4s");
-  return [nlg, s4];
+  const won = linhas.find((l) => l.id === "won");
+  return won ? [nlg, s4, won] : [nlg, s4];
 }
 
 /** O grupo é a soma — a única conta do portal. */
 export function consolidar(fontes: ResumoFonte[]) {
   const realizado = fontes.reduce((a, f) => a + f.realizadoAno, 0);
-  const meta = fontes.reduce((a, f) => a + f.metaAno, 0);
+  const meta = fontes.reduce((a, f) => a + (f.metaAno ?? 0), 0);
   return {
     realizado,
     meta,
-    progresso: (realizado / meta) * 100,
+    progresso: meta > 0 ? (realizado / meta) * 100 : undefined,
     /** Ao vivo só quando TODAS as fontes estão ao vivo. */
     estado: fontes.every((f) => f.estado === "ao-vivo")
       ? ("ao-vivo" as const)

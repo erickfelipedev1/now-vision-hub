@@ -21,6 +21,8 @@ export interface UnidadeConfig {
   fonteDados: string;
   /** Unidade cadastrada, mas ainda sem integração de dados ou painel. */
   pendente?: boolean;
+  /** Unidade integrada aos dados, mas ainda sem painel próprio para embed. */
+  semPainel?: boolean;
   /**
    * Largura nativa do painel embedado, em px. O portal renderiza o iframe
    * nessa largura e escala para caber — é o que faz o painel aparecer inteiro
@@ -74,10 +76,10 @@ export const UNIDADES: UnidadeConfig[] = [
   {
     id: "won",
     nome: "WON",
-    descricao: "Aguardando integração com o Linx Microvix",
+    descricao: "Faturamento consolidado das lojas WON",
     cor: "#FFFFFF",
-    fonteDados: "Linx Microvix (credencial pendente)",
-    pendente: true,
+    fonteDados: "Linx Microvix",
+    semPainel: true,
   },
   {
     id: "ndl",
