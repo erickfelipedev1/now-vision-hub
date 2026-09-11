@@ -103,7 +103,10 @@ function separarCsv(linha: string, delimitador: string): string[] {
 }
 
 function registrosCsvMicrovix(texto: string): RegistroMicrovix[] {
-  const linhas = texto.replace(/^\uFEFF/, "").split(/\r?\n/).filter((linha) => linha.trim());
+  const linhas = texto
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .filter((linha) => linha.trim() && !linha.toLowerCase().startsWith("sep="));
   if (linhas.length < 2) return [];
   const primeiraLinha = linhas[0];
   if (!primeiraLinha) return [];
@@ -254,7 +257,7 @@ function cabecalhoCsvValido(texto: string): boolean {
   const primeira = texto
     .replace(/^\uFEFF/, "")
     .split(/\r?\n/)
-    .find((linha) => linha.trim());
+    .find((linha) => linha.trim() && !linha.toLowerCase().startsWith("sep="));
   if (!primeira) return false;
   const colunas = primeira.toLowerCase();
   return colunas.includes("valor_total") && colunas.includes("timestamp");
