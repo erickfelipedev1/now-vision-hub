@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      resumo_grupo: {
+        Row: {
+          atualizado_em: string
+          created_at: string
+          empresa: string
+          fonte: string
+          meta_ano: number
+          nome: string
+          realizado_ano: number
+        }
+        Insert: {
+          atualizado_em?: string
+          created_at?: string
+          empresa: string
+          fonte?: string
+          meta_ano?: number
+          nome: string
+          realizado_ano?: number
+        }
+        Update: {
+          atualizado_em?: string
+          created_at?: string
+          empresa?: string
+          fonte?: string
+          meta_ano?: number
+          nome?: string
+          realizado_ano?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
