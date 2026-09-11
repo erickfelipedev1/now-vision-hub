@@ -39,12 +39,17 @@ async function buscarNLG() {
   if (!r.ok) throw new Error(`NLG respondeu ${r.status}`);
   const j = await r.json();
   return {
-    empresa: "nlgcomex",
-    nome: "NLG Comex",
-    realizado_ano: numero(j.realizadoAno),
-    meta_ano: numero(j.metaGlobal),
-    fonte: "painel",
-    atualizado_em: new Date().toISOString(),
+    row: {
+      empresa: "nlgcomex",
+      nome: "NLG Comex",
+      realizado_ano: numero(j.realizadoAno),
+      meta_ano: numero(j.metaGlobal),
+      fonte: "painel",
+      atualizado_em: new Date().toISOString(),
+    },
+    progressoMensal: Array.isArray(j.progressoGlobalMensal)
+      ? (j.progressoGlobalMensal as number[])
+      : undefined,
   };
 }
 
@@ -81,11 +86,16 @@ async function atualizarResumo() {
   );
   const { data, error } = await supabaseAdmin
     .from("resumo_grupo")
-    .upsert([nlg, s4], { onConflict: "empresa" })
+    .upsert([nlg.row, s4], { onConflict: "empresa" })
     .select();
 
   if (error) throw new Error(error.message);
-  return { ok: true, atualizadoEm: new Date().toISOString(), resumo: data };
+  const resumo = (data ?? []).map((row) =>
+    row.empresa === "nlgcomex" && nlg.progressoMensal
+      ? { ...row, progressoMensal: nlg.progressoMensal }
+      : row,
+  );
+  return { ok: true, atualizadoEm: new Date().toISOString(), resumo };
 }
 
 export const Route = createFileRoute("/api/public/resumo-grupo")({
