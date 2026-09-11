@@ -76,7 +76,7 @@ function daLinha(l: LinhaResumo): ResumoFonte | null {
       : {}),
     atualizadoEm: l.atualizado_em,
     ...(l.progressoMensal ? { progressoMensal: l.progressoMensal } : {}),
-    estado: "ao-vivo",
+    estado: l.fonte === "retrato" ? "retrato" : "ao-vivo",
   };
 }
 
