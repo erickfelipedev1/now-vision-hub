@@ -71,8 +71,8 @@ async function buscar4S() {
   return {
     empresa: "pulse4s",
     nome: "Jornada 4S",
-    realizado_ano: numero(faturado.valor),
-    meta_ano: numero(meta.valor),
+    realizado_ano: numero(faturado.faturamento),
+    meta_ano: numero(meta.faturamento),
     fonte: "painel",
     atualizado_em: new Date().toISOString(),
   };
