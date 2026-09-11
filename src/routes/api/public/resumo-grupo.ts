@@ -352,12 +352,17 @@ async function atualizarResumo() {
       resumo.push({ ...retratoWon, fonte: "retrato" });
     }
   }
-  const resumo = (data ?? []).map((row) =>
+  const final = resumo.map((row) =>
     row.empresa === "nlgcomex" && nlg.progressoMensal
       ? { ...row, progressoMensal: nlg.progressoMensal }
       : row,
   );
-  return { ok: true, atualizadoEm: new Date().toISOString(), resumo };
+  return {
+    ok: true,
+    atualizadoEm: new Date().toISOString(),
+    resumo: final,
+    ...(erroWon ? { avisos: { won: erroWon } } : {}),
+  };
 }
 
 export const Route = createFileRoute("/api/public/resumo-grupo")({
