@@ -83,7 +83,7 @@ async function lerNLG(): Promise<Linha> {
 async function lerPulse4S(): Promise<Linha> {
   const agora = new Date().toISOString();
 
-  // 1) rota pública, se um dia existir
+  // 1) rota pública /api/public/resumo, se um dia existir
   try {
     const r = await fetch("https://clint-pulse.lovable.app/api/public/resumo", {
       headers: { accept: "application/json" },
@@ -106,34 +106,43 @@ async function lerPulse4S(): Promise<Linha> {
       }
     }
   } catch {
-    /* segue para a leitura da tela */
+    /* segue para a API de diretoria */
   }
 
-  // 2) leitura da tela /diretores
+  // 2) API de diretoria — usa SOMENTE o bloco "Resumo"
   try {
-    const r = await fetch("https://clint-pulse.lovable.app/diretores", {
-      headers: { accept: "text/html" },
-    });
-    if (r.ok) {
-      const html = await r.text();
-      const realizado =
-        html.match(/"realizadoAno"\s*:\s*([\d.]+)/)?.[1] ??
-        html.match(/[Ff]aturamento[^0-9R]{0,80}(R\$\s*[\d.,]+)/)?.[1];
-      const meta =
-        html.match(/"metaAno"\s*:\s*([\d.]+)/)?.[1] ??
-        html.match(/[Mm]eta[^0-9R]{0,80}(R\$\s*[\d.,]+)/)?.[1];
-      const rn = realizado ? paraNumero(realizado) : null;
-      const mn = meta ? paraNumero(meta) : null;
-      if (rn && mn) {
-        return {
-          empresa: "pulse4s",
-          nome: "Jornada 4S",
-          realizado_ano: rn,
-          meta_ano: mn,
-          fonte: "tela:clint-pulse/diretores",
-          atualizado_em: agora,
-        };
-      }
+    const url =
+      "https://clint-pulse.lovable.app/api/public/diretoria?token=bedfd9d8152959d162a4e0163b77240d5e9bd709aad73f90&format=json";
+    const r = await fetch(url, { headers: { accept: "application/json" } });
+    if (!r.ok) throw new Error(String(r.status));
+    const j = (await r.json()) as {
+      dados?: Array<{
+        bloco?: string;
+        nome?: string;
+        faturamento?: number | string;
+      }>;
+    };
+    const itens = Array.isArray(j.dados) ? j.dados : [];
+    const resumo = itens.filter((i) => i.bloco === "Resumo");
+    const realizadoItem = resumo.find((i) => i.nome === "Faturado no ano");
+    const metaItem = resumo.find((i) => i.nome === "Meta do ano");
+    const rn =
+      typeof realizadoItem?.faturamento === "number"
+        ? realizadoItem.faturamento
+        : paraNumero(String(realizadoItem?.faturamento ?? ""));
+    const mn =
+      typeof metaItem?.faturamento === "number"
+        ? metaItem.faturamento
+        : paraNumero(String(metaItem?.faturamento ?? ""));
+    if (rn && mn) {
+      return {
+        empresa: "pulse4s",
+        nome: "Jornada 4S",
+        realizado_ano: rn,
+        meta_ano: mn,
+        fonte: "api:clint-pulse/diretoria",
+        atualizado_em: agora,
+      };
     }
   } catch {
     /* cai no retrato */
