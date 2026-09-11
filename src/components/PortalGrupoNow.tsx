@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ArrowUpRight,
   AlertTriangle,
+  Clock3,
   LayoutGrid,
   Menu,
   ShieldCheck,
@@ -315,7 +316,6 @@ export default function PortalGrupoNow() {
                 <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {UNIDADES.map((u) => {
                     const fonte = resumo.fontes.find((f) => f.id === u.id);
-                    const det = DETALHES[u.id];
                     const bateu = fonte ? fonte.progresso >= 100 : false;
                     return (
                       <div
@@ -338,7 +338,7 @@ export default function PortalGrupoNow() {
                               </p>
                             </div>
                           </div>
-                          {fonte && (
+                          {fonte && !u.pendente && (
                             <span
                               className="flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium"
                               style={{
@@ -359,7 +359,11 @@ export default function PortalGrupoNow() {
                               Realizado no ano
                             </p>
                             <p className="text-[16px] font-semibold tabular-nums">
-                              {fonte ? brl(fonte.realizadoAno) : "—"}
+                              {u.pendente
+                                ? "—"
+                                : fonte
+                                  ? brl(fonte.realizadoAno)
+                                  : "—"}
                             </p>
                           </div>
                           <div>
@@ -367,7 +371,9 @@ export default function PortalGrupoNow() {
                               Progresso
                             </p>
                             <p className="text-[16px] font-semibold tabular-nums">
-                              {fonte
+                              {u.pendente
+                                ? "—"
+                                : fonte
                                 ? `${fonte.progresso.toLocaleString("pt-BR", {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2,
@@ -377,10 +383,16 @@ export default function PortalGrupoNow() {
                           </div>
                           <div>
                             <p className="mb-1 text-[11px] text-[#6F7987]">
-                              {u.id === "nlgcomex" ? "Margem" : "Reuniões"}
+                              {u.pendente
+                                ? "Status"
+                                : u.id === "nlgcomex"
+                                  ? "Margem"
+                                  : "Reuniões"}
                             </p>
                             <p className="text-[16px] font-semibold tabular-nums">
-                              {u.id === "nlgcomex"
+                              {u.pendente
+                                ? "Pendente"
+                                : u.id === "nlgcomex"
                                 ? DETALHES.nlgcomex.margem
                                 : DETALHES.pulse4s.reunioes}
                             </p>
@@ -388,8 +400,10 @@ export default function PortalGrupoNow() {
                         </div>
 
                         <p className="mb-4 text-[12px] text-[#8A94A3]">
-                          {u.id === "nlgcomex"
-                            ? `${det ? "Média de " + brl(DETALHES.nlgcomex.mediaMensal) + "/mês" : ""} · ${DETALHES.nlgcomex.mesesRestantes} meses restantes`
+                          {u.pendente
+                            ? "Aguardando integração de dados."
+                            : u.id === "nlgcomex"
+                            ? `Média de ${brl(DETALHES.nlgcomex.mediaMensal)}/mês · ${DETALHES.nlgcomex.mesesRestantes} meses restantes`
                             : `Precisa de ${brl(DETALHES.pulse4s.runRate)}/mês nos ${DETALHES.pulse4s.mesesRestantes} meses restantes`}
                         </p>
 
@@ -397,7 +411,7 @@ export default function PortalGrupoNow() {
                           onClick={() => navegar(u.id)}
                           className="mt-auto flex items-center justify-center gap-1.5 rounded-lg border border-[#243040] bg-[#16202C] px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-[#1C2635]"
                         >
-                          Abrir dashboard completo
+                          {u.pendente ? "Ver detalhes" : "Abrir dashboard completo"}
                           <ArrowUpRight size={15} aria-hidden="true" />
                         </button>
                       </div>
@@ -429,13 +443,34 @@ export default function PortalGrupoNow() {
                 </section>
               </div>
             ) : (
-              unidadeAtiva && (
+              unidadeAtiva &&
+              (unidadeAtiva.pendente ? (
+                <section className="flex h-full items-center justify-center px-6 py-12 text-center">
+                  <div className="max-w-xl">
+                    <div
+                      className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border"
+                      style={{
+                        color: unidadeAtiva.cor,
+                        borderColor: `${unidadeAtiva.cor}55`,
+                        background: `${unidadeAtiva.cor}12`,
+                      }}
+                    >
+                      <Clock3 size={30} aria-hidden="true" />
+                    </div>
+                    <h2 className="mb-2 text-[22px] font-semibold">Em construção</h2>
+                    <p className="text-[14px] leading-relaxed text-[#8A94A3]">
+                      {unidadeAtiva.descricao} — assim que a integração estiver
+                      pronta, o painel da {unidadeAtiva.nome} aparece aqui.
+                    </p>
+                  </div>
+                </section>
+              ) : (
                 <DashboardEmbed
                   unidade={unidadeAtiva}
                   telaCheia={telaCheia}
                   onToggleTelaCheia={() => setTelaCheia((v) => !v)}
                 />
-              )
+              ))
             )}
           </main>
         </div>
