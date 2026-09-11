@@ -1,9 +1,9 @@
 /**
  * Camada de dados ao vivo do portal.
  *
- * Antes, a visão geral era um retrato digitado à mão: os painéis embedados
- * atualizavam sozinhos e a faixa de cima não. Aqui ela passa a buscar os
- * mesmos números na fonte.
+ * O portal chama a rota do servidor `/api/public/resumo-grupo`, que busca os
+ * painéis das duas unidades do lado do servidor (sem problema de CORS),
+ * grava o resultado na tabela `resumo_grupo` e devolve o JSON atualizado.
  *
  * Regra de ouro mantida: quando uma fonte falha, o portal NÃO inventa e NÃO
  * finge. Ele cai no último retrato conhecido (`SNAPSHOT`) e marca a data
@@ -12,12 +12,8 @@
 
 import { SNAPSHOT } from "@/data/snapshot";
 
-export const ENDPOINTS = {
-  /** Já existe e está no ar. Só faltava liberar CORS para o portal. */
-  nlgcomex: "https://groupnow-nlgcomex.lovable.app/api/public/painel",
-  /** A criar no projeto clint-pulse — ver PROMPT-APIS.md. */
-  pulse4s: "https://clint-pulse.lovable.app/api/public/resumo",
-} as const;
+/** Rota do próprio portal — servidor a servidor com os painéis. */
+export const ENDPOINT_RESUMO = "/api/public/resumo-grupo";
 
 export type UnidadeId = "nlgcomex" | "pulse4s";
 export type EstadoFonte = "ao-vivo" | "retrato" | "carregando";
@@ -34,66 +30,22 @@ export interface ResumoFonte {
   progressoMensal?: number[];
 }
 
-/* ------------------------------------------------------------------- NLG */
+interface LinhaResumo {
+  empresa: string;
+  nome: string;
+  realizado_ano: number;
+  meta_ano: number;
+  fonte: string;
+  atualizado_em: string;
+  progressoMensal?: number[];
+}
 
-interface PainelNLG {
-  ano: number;
+interface RespostaResumo {
+  ok: boolean;
   atualizadoEm: string;
-  metaGlobal: number;
-  realizadoAno: number;
-  progressoGlobal: number;
-  progressoGlobalMensal: number[];
-  setores: {
-    id: string;
-    nome: string;
-    metaAnual: number;
-    realizadoAno: number;
-    progressoAnual: number;
-    representatividade: number;
-  }[];
-  /** Margem mensal por empresa do grupo — inclui unidades fora deste portal. */
-  margem: Record<string, (number | null)[]>;
+  resumo: LinhaResumo[];
+  erro?: string;
 }
-
-async function buscarNLG(signal?: AbortSignal): Promise<ResumoFonte> {
-  const r = await fetch(ENDPOINTS.nlgcomex, { signal: signal ?? null });
-  if (!r.ok) throw new Error(`NLG respondeu ${r.status}`);
-  const j: PainelNLG = await r.json();
-  return {
-    id: "nlgcomex",
-    realizadoAno: j.realizadoAno,
-    metaAno: j.metaGlobal,
-    progresso: j.progressoGlobal,
-    atualizadoEm: j.atualizadoEm,
-    progressoMensal: j.progressoGlobalMensal,
-    estado: "ao-vivo",
-  };
-}
-
-/* -------------------------------------------------------------------- 4S */
-
-interface ResumoAPI {
-  atualizadoEm: string;
-  realizadoAno: number;
-  metaAno: number;
-  progresso: number;
-}
-
-async function buscar4S(signal?: AbortSignal): Promise<ResumoFonte> {
-  const r = await fetch(ENDPOINTS.pulse4s, { signal: signal ?? null });
-  if (!r.ok) throw new Error(`4S respondeu ${r.status}`);
-  const j: ResumoAPI = await r.json();
-  return {
-    id: "pulse4s",
-    realizadoAno: j.realizadoAno,
-    metaAno: j.metaAno,
-    progresso: j.progresso,
-    atualizadoEm: j.atualizadoEm,
-    estado: "ao-vivo",
-  };
-}
-
-/* --------------------------------------------------------------- retrato */
 
 function doRetrato(id: UnidadeId): ResumoFonte {
   const s = SNAPSHOT[id];
@@ -108,22 +60,44 @@ function doRetrato(id: UnidadeId): ResumoFonte {
   };
 }
 
+function daLinha(l: LinhaResumo): ResumoFonte | null {
+  if (l.empresa !== "nlgcomex" && l.empresa !== "pulse4s") return null;
+  return {
+    id: l.empresa,
+    realizadoAno: l.realizado_ano,
+    metaAno: l.meta_ano,
+    progresso: l.meta_ano > 0 ? (l.realizado_ano / l.meta_ano) * 100 : 0,
+    atualizadoEm: l.atualizado_em,
+    ...(l.progressoMensal ? { progressoMensal: l.progressoMensal } : {}),
+    estado: "ao-vivo",
+  };
+}
+
 /**
- * Busca as duas fontes em paralelo. Uma falha não derruba a outra: cada
- * unidade cai no seu próprio retrato, então o portal pode ficar meio ao vivo
- * e meio retrato — e a tela diz qual é qual.
+ * Uma chamada só: o servidor consolida as duas unidades. Se a rota falhar
+ * (ou faltar uma empresa na resposta), aquela unidade cai no retrato — o
+ * portal pode ficar meio ao vivo e meio retrato, e a tela diz qual é qual.
  */
 export async function buscarResumos(
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<ResumoFonte[]> {
-  const [nlg, s4] = await Promise.allSettled([
-    buscarNLG(signal),
-    buscar4S(signal),
-  ]);
-  return [
-    nlg.status === "fulfilled" ? nlg.value : doRetrato("nlgcomex"),
-    s4.status === "fulfilled" ? s4.value : doRetrato("pulse4s"),
-  ];
+  let linhas: ResumoFonte[] = [];
+  try {
+    const r = await fetch(ENDPOINT_RESUMO, { signal: signal ?? null });
+    if (!r.ok) throw new Error(`resumo-grupo respondeu ${r.status}`);
+    const j: RespostaResumo = await r.json();
+    if (!j.ok) throw new Error(j.erro ?? "resumo-grupo falhou");
+    linhas = (j.resumo ?? [])
+      .map(daLinha)
+      .filter((l): l is ResumoFonte => l !== null);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") throw e;
+    linhas = [];
+  }
+
+  const nlg = linhas.find((l) => l.id === "nlgcomex") ?? doRetrato("nlgcomex");
+  const s4 = linhas.find((l) => l.id === "pulse4s") ?? doRetrato("pulse4s");
+  return [nlg, s4];
 }
 
 /** O grupo é a soma — a única conta do portal. */
