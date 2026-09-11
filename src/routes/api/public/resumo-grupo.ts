@@ -9,11 +9,11 @@ const ORIGENS_PERMITIDAS = [
   "https://id-preview--dcffded8-ec22-41b6-b4a0-ed8e7399c389.lovable.app",
 ];
 
-function corsHeaders(req: Request) {
+function corsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("Origin") ?? "";
-  const allow = ORIGENS_PERMITIDAS.includes(origin)
+  const allow: string = ORIGENS_PERMITIDAS.includes(origin)
     ? origin
-    : ORIGENS_PERMITIDAS[0];
+    : "https://now-vision-hub.lovable.app";
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
