@@ -223,8 +223,8 @@ async function buscarLojaWon(cnpj: string): Promise<number> {
 
 /** Procura ResponseSuccess/Message em qualquer nível do XML da Microvix. */
 function statusMicrovix(xml: unknown): {
-  success?: boolean;
-  message?: string;
+  success?: boolean | undefined;
+  message?: string | undefined;
 } {
   let success: boolean | undefined;
   let message: string | undefined;
@@ -318,17 +318,40 @@ async function buscar4S() {
 }
 
 async function atualizarResumo() {
-  const [nlg, s4, won] = await Promise.all([buscarNLG(), buscar4S(), buscarWON()]);
+  const [nlg, s4] = await Promise.all([buscarNLG(), buscar4S()]);
+
+  /* WON à parte: se a Microvix falhar, NÃO grava zero — devolve o último
+     retrato gravado (ou omite a linha) e avisa no JSON. */
+  let won: Awaited<ReturnType<typeof buscarWON>> | null = null;
+  let erroWon: string | null = null;
+  try {
+    won = await buscarWON();
+  } catch (e) {
+    erroWon = e instanceof Error ? e.message : String(e);
+    console.error(`[resumo-grupo][WON] falhou, mantendo retrato: ${erroWon}`);
+  }
 
   const { supabaseAdmin } = await import(
     "@/integrations/supabase/client.server"
   );
+  const linhas = won ? [nlg.row, s4, won] : [nlg.row, s4];
   const { data, error } = await supabaseAdmin
     .from("resumo_grupo")
-    .upsert([nlg.row, s4, won], { onConflict: "empresa" })
+    .upsert(linhas, { onConflict: "empresa" })
     .select();
 
   if (error) throw new Error(error.message);
+  const resumo = [...(data ?? [])];
+  if (!won) {
+    const { data: retratoWon } = await supabaseAdmin
+      .from("resumo_grupo")
+      .select()
+      .eq("empresa", "won")
+      .maybeSingle();
+    if (retratoWon && !resumo.some((r) => r.empresa === "won")) {
+      resumo.push({ ...retratoWon, fonte: "retrato" });
+    }
+  }
   const resumo = (data ?? []).map((row) =>
     row.empresa === "nlgcomex" && nlg.progressoMensal
       ? { ...row, progressoMensal: nlg.progressoMensal }
