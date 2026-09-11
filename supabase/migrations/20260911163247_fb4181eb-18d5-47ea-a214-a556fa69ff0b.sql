@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS resumo_grupo_empresa_key ON public.resumo_grupo (empresa);
