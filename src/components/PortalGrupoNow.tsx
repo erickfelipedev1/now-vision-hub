@@ -12,6 +12,7 @@ import ReceitaChart from "@/components/ReceitaChart";
 import ProgressoMetas from "@/components/ProgressoMetas";
 import LogoGrupoNow from "@/components/LogoGrupoNow";
 import DashboardEmbed from "@/components/DashboardEmbed";
+import PainelResumo from "@/components/PainelResumo";
 import { UNIDADES, CORES, type UnidadeId } from "@/config/dashboards";
 import { useResumoGrupo } from "@/hooks/useResumoGrupo";
 import { RECEITA_MENSAL, PERIODOS, type PeriodoId } from "@/data/mock";
@@ -320,7 +321,7 @@ export default function PortalGrupoNow() {
                     const fonte = resumo.fontes.find((f) => f.id === u.id);
                     const bateu = (fonte?.progresso ?? 0) >= 100;
                     const semMeta = fonte !== undefined && fonte.metaAno === undefined;
-                    const semPainel = u.pendente || u.semPainel;
+                    const semPainel = u.pendente || !u.url;
                     return (
                       <div
                         key={u.id}
@@ -400,7 +401,7 @@ export default function PortalGrupoNow() {
                                 ? DETALHES.nlgcomex.margem
                                  : u.id === "pulse4s"
                                    ? DETALHES.pulse4s.reunioes
-                                   : "Microvix"}
+                                   : u.fonteDados}
                             </p>
                           </div>
                         </div>
@@ -412,7 +413,7 @@ export default function PortalGrupoNow() {
                             ? `Média de ${brl(DETALHES.nlgcomex.mediaMensal)}/mês · ${DETALHES.nlgcomex.mesesRestantes} meses restantes`
                              : u.id === "pulse4s"
                                ? `Precisa de ${brl(DETALHES.pulse4s.runRate)}/mês nos ${DETALHES.pulse4s.mesesRestantes} meses restantes`
-                               : "Realizado consolidado das três lojas · meta anual ainda não definida"}
+                               : `Dados consolidados · fonte: ${u.fonteDados}`}
                         </p>
 
                         <button
@@ -452,7 +453,7 @@ export default function PortalGrupoNow() {
               </div>
             ) : (
               unidadeAtiva &&
-               (unidadeAtiva.pendente || unidadeAtiva.semPainel ? (
+               (unidadeAtiva.pendente ? (
                 <section className="flex h-full items-center justify-center px-6 py-12 text-center">
                   <div className="max-w-xl">
                     <div
@@ -472,12 +473,14 @@ export default function PortalGrupoNow() {
                     </p>
                   </div>
                 </section>
-              ) : (
+              ) : unidadeAtiva.url ? (
                 <DashboardEmbed
                   unidade={unidadeAtiva}
                   telaCheia={telaCheia}
                   onToggleTelaCheia={() => setTelaCheia((v) => !v)}
                 />
+              ) : (
+                <PainelResumo unidade={unidadeAtiva} resumo={resumo} />
               ))
             )}
           </main>

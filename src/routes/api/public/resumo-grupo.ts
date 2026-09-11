@@ -269,7 +269,8 @@ async function buscarWON() {
     empresa: "won",
     nome: "WON",
     realizado_ano: totais.reduce((soma, valor) => soma + valor, 0),
-    meta_ano: null,
+    /* meta_ano propositalmente fora do upsert: a meta da WON é configurada
+       direto na tabela e a atualização não pode apagá-la. */
     fonte: "Linx Microvix",
     atualizado_em: new Date().toISOString(),
   };
@@ -337,7 +338,18 @@ async function atualizarResumo() {
   const { supabaseAdmin } = await import(
     "@/integrations/supabase/client.server"
   );
-  const linhas = won ? [nlg.row, s4, won] : [nlg.row, s4];
+  /* PostgREST upsert zera colunas omitidas — lê a meta atual da WON para
+     não apagar a meta configurada manualmente na tabela. */
+  let metaWon: number | null = null;
+  {
+    const { data: atual } = await supabaseAdmin
+      .from("resumo_grupo")
+      .select("meta_ano")
+      .eq("empresa", "won")
+      .maybeSingle();
+    metaWon = (atual?.meta_ano as number | null) ?? null;
+  }
+  const linhas = won ? [nlg.row, s4, { ...won, meta_ano: metaWon }] : [nlg.row, s4];
   const { data, error } = await supabaseAdmin
     .from("resumo_grupo")
     .upsert(linhas, { onConflict: "empresa" })
