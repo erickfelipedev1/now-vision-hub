@@ -8,17 +8,19 @@
  * permitir ser enquadrado por este portal. Veja o README.
  */
 
-export type UnidadeId = "nlgcomex" | "pulse4s";
+export type UnidadeId = "nlgcomex" | "pulse4s" | "won" | "ndl";
 
 export interface UnidadeConfig {
   id: UnidadeId;
   nome: string;
   descricao: string;
-  repo: string;
-  url: string;
+  repo?: string;
+  url?: string;
   /** Cor de identidade da unidade — validada para modo claro e escuro. */
   cor: string;
   fonteDados: string;
+  /** Unidade cadastrada, mas ainda sem integração de dados ou painel. */
+  pendente?: boolean;
   /**
    * Largura nativa do painel embedado, em px. O portal renderiza o iframe
    * nessa largura e escala para caber — é o que faz o painel aparecer inteiro
@@ -36,6 +38,7 @@ export interface UnidadeConfig {
 
 /** Monta a URL do embed com os parâmetros da unidade, se houver. */
 export function urlDoEmbed(unidade: UnidadeConfig): string {
+  if (!unidade.url) return "";
   if (!unidade.urlParams) return unidade.url;
   const url = new URL(unidade.url);
   for (const [chave, valor] of Object.entries(unidade.urlParams)) {
@@ -67,6 +70,22 @@ export const UNIDADES: UnidadeConfig[] = [
     // A rota /diretores já é anual; só sinalizamos a origem para o painel
     // esconder a navegação própria dentro do iframe.
     urlParams: { origem: "portal-diretoria" },
+  },
+  {
+    id: "won",
+    nome: "WON",
+    descricao: "Aguardando integração com o Linx Microvix",
+    cor: "#FFFFFF",
+    fonteDados: "Linx Microvix (credencial pendente)",
+    pendente: true,
+  },
+  {
+    id: "ndl",
+    nome: "NDL",
+    descricao: "Aguardando definição da fonte de dados",
+    cor: "#3FA35E",
+    fonteDados: "A definir",
+    pendente: true,
   },
 ];
 
