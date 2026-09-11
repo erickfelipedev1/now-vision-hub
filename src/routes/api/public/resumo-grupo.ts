@@ -58,8 +58,8 @@ async function buscar4S() {
   const r = await fetch(URL_4S);
   if (!r.ok) throw new Error(`4S respondeu ${r.status}`);
   const j = await r.json();
-  const itens: { bloco?: string; nome?: string; valor?: unknown }[] =
-    Array.isArray(j) ? j : (j.itens ?? j.dados ?? j.data ?? []);
+  const itens: { bloco?: string; nome?: string; faturamento?: unknown }[] =
+    Array.isArray(j) ? j : (j.rows ?? j.itens ?? j.dados ?? j.data ?? []);
   const resumo = itens.filter((i) => i.bloco === "Resumo");
   const faturado = resumo.find((i) => i.nome === "Faturado no ano");
   const meta = resumo.find((i) => i.nome === "Meta do ano");
