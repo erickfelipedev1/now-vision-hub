@@ -201,7 +201,7 @@ export default function ProgressoMetas({ resumo }: { resumo: ResumoGrupo }) {
                   key={f.id}
                   nome={u?.nome ?? f.id}
                   realizado={f.realizadoAno}
-                  meta={f.metaAno}
+                  {...(f.metaAno !== undefined ? { meta: f.metaAno } : {})}
                   cor={u?.cor ?? "#8A94A3"}
                   retrato={f.estado === "retrato"}
                 />

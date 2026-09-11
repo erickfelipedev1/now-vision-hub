@@ -76,9 +76,11 @@ export default function PortalGrupoNow() {
       id: "s4",
       rotulo: "Realizado · Jornada 4S",
       valor: fonte4s ? brl(fonte4s.realizadoAno) : "—",
-      detalhe: fonte4s
+      detalhe: fonte4s?.metaAno !== undefined
         ? `faltam ${brl(Math.max(0, fonte4s.metaAno - fonte4s.realizadoAno))} para a meta do ano`
-        : "",
+        : fonte4s
+          ? "meta anual ainda não definida"
+          : "",
       retrato: fonte4s?.estado === "retrato",
     },
     {
