@@ -75,6 +75,45 @@ function registrosMicrovix(valor: unknown): RegistroMicrovix[] {
   return encontrados;
 }
 
+function separarCsv(linha: string, delimitador: string): string[] {
+  const campos: string[] = [];
+  let atual = "";
+  let aspas = false;
+  for (let indice = 0; indice < linha.length; indice += 1) {
+    const caractere = linha[indice];
+    if (caractere === '"') {
+      if (aspas && linha[indice + 1] === '"') {
+        atual += '"';
+        indice += 1;
+      } else {
+        aspas = !aspas;
+      }
+    } else if (caractere === delimitador && !aspas) {
+      campos.push(atual.trim());
+      atual = "";
+    } else {
+      atual += caractere;
+    }
+  }
+  campos.push(atual.trim());
+  return campos;
+}
+
+function registrosCsvMicrovix(texto: string): RegistroMicrovix[] {
+  const linhas = texto.replace(/^\uFEFF/, "").split(/\r?\n/).filter((linha) => linha.trim());
+  if (linhas.length < 2) return [];
+  const delimitadores = ["|", ";", "\t", ","];
+  const delimitador = delimitadores.reduce((melhor, atual) =>
+    linhas[0].split(atual).length > linhas[0].split(melhor).length ? atual : melhor,
+  );
+  const cabecalho = separarCsv(linhas[0], delimitador).map((item) => item.trim());
+  if (!cabecalho.some((item) => item.toLowerCase() === "valor_total")) return [];
+  return linhas.slice(1).map((linha) => {
+    const valores = separarCsv(linha, delimitador);
+    return Object.fromEntries(cabecalho.map((nome, indice) => [nome, valores[indice] ?? ""]));
+  });
+}
+
 function campo(registro: RegistroMicrovix, nome: string): unknown {
   const chave = Object.keys(registro).find(
     (item) => item.toLowerCase() === nome.toLowerCase(),
@@ -101,7 +140,7 @@ async function buscarLojaWon(cnpj: string): Promise<number> {
     const xml = `<?xml version="1.0" encoding="utf-8"?>
 <LinxMicrovix>
   <Authentication user="${escaparXml(usuario)}" password="${escaparXml(senha)}" />
-  <ResponseFormat>xml</ResponseFormat>
+  <ResponseFormat>csv</ResponseFormat>
   <Command>
     <Name>LinxMovimento</Name>
     <Parameters>
@@ -122,7 +161,9 @@ async function buscarLojaWon(cnpj: string): Promise<number> {
     });
     if (!r.ok) throw new Error(`Microvix respondeu ${r.status} para ${cnpj}`);
     const resposta = await r.text();
-    const registros = registrosMicrovix(parser.parse(resposta));
+    const registros = resposta.trimStart().startsWith("<")
+      ? registrosMicrovix(parser.parse(resposta))
+      : registrosCsvMicrovix(resposta);
     if (registros.length === 0) break;
 
     let maiorTimestamp = timestamp;
