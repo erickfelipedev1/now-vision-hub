@@ -5,8 +5,9 @@
  * sem CORS no caminho), grava em public.resumo_grupo e devolve as duas linhas.
  *
  * NLG  -> https://groupnow-nlgcomex.lovable.app/api/public/painel
- * 4S   -> /api/public/resumo (quando existir) ou leitura da tela /diretores
- *         e, em último caso, o último retrato conhecido.
+ * 4S   -> https://clint-pulse.lovable.app/api/public/diretoria?format=json
+ *         (usa apenas o bloco "Resumo", ignorando Pessoa/Canal).
+ *         Fallbacks: /api/public/resumo, depois snapshot.
  */
 
 import { createFileRoute } from "@tanstack/react-router";
