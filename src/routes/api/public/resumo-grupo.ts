@@ -29,9 +29,12 @@ function corsHeaders(req: Request): Record<string, string> {
 function numero(v: unknown): number {
   if (typeof v === "number" && Number.isFinite(v)) return v;
   if (typeof v === "string") {
-    const n = Number(
-      v.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", "."),
-    );
+    const limpo = v.replace(/[^\d,.-]/g, "");
+    const temVirgula = limpo.includes(",");
+    const normalizado = temVirgula
+      ? limpo.replace(/\./g, "").replace(",", ".")
+      : limpo;
+    const n = Number(normalizado);
     return Number.isFinite(n) ? n : 0;
   }
   return 0;
