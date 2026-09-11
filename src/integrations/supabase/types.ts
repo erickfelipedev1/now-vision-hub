@@ -20,7 +20,7 @@ export type Database = {
           created_at: string
           empresa: string
           fonte: string
-          meta_ano: number
+          meta_ano: number | null
           nome: string
           realizado_ano: number
         }
@@ -29,7 +29,7 @@ export type Database = {
           created_at?: string
           empresa: string
           fonte?: string
-          meta_ano?: number
+          meta_ano?: number | null
           nome: string
           realizado_ano?: number
         }
@@ -38,7 +38,7 @@ export type Database = {
           created_at?: string
           empresa?: string
           fonte?: string
-          meta_ano?: number
+          meta_ano?: number | null
           nome?: string
           realizado_ano?: number
         }
