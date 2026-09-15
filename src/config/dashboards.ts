@@ -75,8 +75,11 @@ export const UNIDADES: UnidadeConfig[] = [
     id: "won",
     nome: "WON",
     descricao: "Faturamento consolidado das lojas WON",
+    url: "https://groupnow-won.lovable.app/painel",
     cor: "#FFFFFF",
     fonteDados: "Linx Microvix",
+    larguraBase: 1920,
+    urlParams: { origem: "portal-diretoria" },
   },
   {
     id: "ndl",
