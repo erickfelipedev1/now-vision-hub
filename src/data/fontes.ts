@@ -86,6 +86,7 @@ function daLinha(l: LinhaResumo): ResumoFonte | null {
       : {}),
     atualizadoEm: l.atualizado_em,
     ...(l.progressoMensal ? { progressoMensal: l.progressoMensal } : {}),
+    ...(l.pessoas && l.pessoas.length > 0 ? { pessoas: l.pessoas } : {}),
     estado: l.fonte === "retrato" ? "retrato" : "ao-vivo",
   };
 }
