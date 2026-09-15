@@ -158,6 +158,7 @@ async function buscarLojaWon(cnpj: string): Promise<ResultadoLojaWon> {
   const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
   let timestamp = "0";
   let total = 0;
+  const pessoas = new Map<string, { valor: number; itens: number }>();
 
   for (let pagina = 0; pagina < LIMITE_PAGINAS_MICROVIX; pagina += 1) {
     const xml = `<?xml version="1.0" encoding="utf-8"?>
@@ -221,8 +222,14 @@ async function buscarLojaWon(cnpj: string): Promise<ResultadoLojaWon> {
       const excluido = String(campo(registro, "excluido") ?? "").toUpperCase();
       const tipo = String(campo(registro, "tipo_transacao") ?? "").toUpperCase();
       if (cancelado === "N" && excluido === "N" && tipo === "V") {
-        total += numero(campo(registro, "valor_total"));
+        const valor = numero(campo(registro, "valor_total"));
+        total += valor;
         validas += 1;
+        const quem = nomeVendedor(registro);
+        const acumulado = pessoas.get(quem) ?? { valor: 0, itens: 0 };
+        acumulado.valor += valor;
+        acumulado.itens += 1;
+        pessoas.set(quem, acumulado);
       }
       const atual = String(campo(registro, "timestamp") ?? "");
       if (atual && BigInt(atual) > BigInt(maiorTimestamp)) maiorTimestamp = atual;
@@ -236,7 +243,7 @@ async function buscarLojaWon(cnpj: string): Promise<ResultadoLojaWon> {
     timestamp = maiorTimestamp;
   }
   console.log(`[resumo-grupo][WON] CNPJ ${cnpj}: total vendas = R$ ${total.toFixed(2)}`);
-  return total;
+  return { total, pessoas };
 }
 
 /** Procura ResponseSuccess/Message em qualquer nível do XML da Microvix. */
