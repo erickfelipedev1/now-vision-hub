@@ -410,11 +410,15 @@ async function atualizarResumo() {
       resumo.push({ ...retratoWon, fonte: "retrato" });
     }
   }
-  const final = resumo.map((row) =>
-    row.empresa === "nlgcomex" && nlg.progressoMensal
-      ? { ...row, progressoMensal: nlg.progressoMensal }
-      : row,
-  );
+  const final = resumo.map((row) => {
+    if (row.empresa === "nlgcomex" && nlg.progressoMensal) {
+      return { ...row, progressoMensal: nlg.progressoMensal };
+    }
+    if (row.empresa === "won" && pessoasWon) {
+      return { ...row, pessoas: pessoasWon };
+    }
+    return row;
+  });
   return {
     ok: true,
     atualizadoEm: new Date().toISOString(),
