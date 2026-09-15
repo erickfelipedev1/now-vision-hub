@@ -18,6 +18,13 @@ export const ENDPOINT_RESUMO = "/api/public/resumo-grupo";
 
 export type EstadoFonte = "ao-vivo" | "retrato" | "carregando";
 
+/** Ranking de pessoas (vendedores) de uma unidade, quando a fonte manda. */
+export interface PessoaFonte {
+  nome: string;
+  valor: number;
+  itens?: number;
+}
+
 export interface ResumoFonte {
   id: UnidadeId;
   realizadoAno: number;
@@ -28,6 +35,8 @@ export interface ResumoFonte {
   estado: EstadoFonte;
   /** Percentual da meta anual realizado em cada mês, 12 posições. */
   progressoMensal?: number[];
+  /** Ranking de pessoas, quando a fonte manda (ex.: vendedores da WON). */
+  pessoas?: PessoaFonte[];
 }
 
 interface LinhaResumo {
@@ -38,6 +47,7 @@ interface LinhaResumo {
   fonte: string;
   atualizado_em: string;
   progressoMensal?: number[];
+  pessoas?: PessoaFonte[];
 }
 
 interface RespostaResumo {
@@ -76,6 +86,7 @@ function daLinha(l: LinhaResumo): ResumoFonte | null {
       : {}),
     atualizadoEm: l.atualizado_em,
     ...(l.progressoMensal ? { progressoMensal: l.progressoMensal } : {}),
+    ...(l.pessoas && l.pessoas.length > 0 ? { pessoas: l.pessoas } : {}),
     estado: l.fonte === "retrato" ? "retrato" : "ao-vivo",
   };
 }

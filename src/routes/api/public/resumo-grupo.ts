@@ -129,7 +129,22 @@ function campo(registro: RegistroMicrovix, nome: string): unknown {
   return chave ? registro[chave] : undefined;
 }
 
-async function buscarLojaWon(cnpj: string): Promise<number> {
+/** Nome do vendedor: a Microvix manda no campo obs ("Nome do Vendedor: X"). */
+function nomeVendedor(registro: RegistroMicrovix): string {
+  const obs = String(campo(registro, "obs") ?? "");
+  const achado = obs.match(/Nome do Vendedor:\s*([^|]+)/i);
+  const nome = achado?.[1]?.trim();
+  if (nome) return nome;
+  const cod = String(campo(registro, "cod_vendedor") ?? "").trim();
+  return cod ? `Vendedor ${cod}` : "Sem vendedor";
+}
+
+interface ResultadoLojaWon {
+  total: number;
+  pessoas: Map<string, { valor: number; itens: number }>;
+}
+
+async function buscarLojaWon(cnpj: string): Promise<ResultadoLojaWon> {
   const chave = process.env["MICROVIX_CHAVE"];
   const usuario = process.env["MICROVIX_USER"];
   const senha = process.env["MICROVIX_PASSWORD"];
@@ -143,6 +158,7 @@ async function buscarLojaWon(cnpj: string): Promise<number> {
   const parser = new XMLParser({ ignoreAttributes: false, trimValues: true });
   let timestamp = "0";
   let total = 0;
+  const pessoas = new Map<string, { valor: number; itens: number }>();
 
   for (let pagina = 0; pagina < LIMITE_PAGINAS_MICROVIX; pagina += 1) {
     const xml = `<?xml version="1.0" encoding="utf-8"?>
@@ -206,8 +222,14 @@ async function buscarLojaWon(cnpj: string): Promise<number> {
       const excluido = String(campo(registro, "excluido") ?? "").toUpperCase();
       const tipo = String(campo(registro, "tipo_transacao") ?? "").toUpperCase();
       if (cancelado === "N" && excluido === "N" && tipo === "V") {
-        total += numero(campo(registro, "valor_total"));
+        const valor = numero(campo(registro, "valor_total"));
+        total += valor;
         validas += 1;
+        const quem = nomeVendedor(registro);
+        const acumulado = pessoas.get(quem) ?? { valor: 0, itens: 0 };
+        acumulado.valor += valor;
+        acumulado.itens += 1;
+        pessoas.set(quem, acumulado);
       }
       const atual = String(campo(registro, "timestamp") ?? "");
       if (atual && BigInt(atual) > BigInt(maiorTimestamp)) maiorTimestamp = atual;
@@ -221,7 +243,7 @@ async function buscarLojaWon(cnpj: string): Promise<number> {
     timestamp = maiorTimestamp;
   }
   console.log(`[resumo-grupo][WON] CNPJ ${cnpj}: total vendas = R$ ${total.toFixed(2)}`);
-  return total;
+  return { total, pessoas };
 }
 
 /** Procura ResponseSuccess/Message em qualquer nível do XML da Microvix. */
@@ -264,11 +286,27 @@ function cabecalhoCsvValido(texto: string): boolean {
 }
 
 async function buscarWON() {
-  const totais = await Promise.all(CNPJS_WON.map(buscarLojaWon));
+  const lojas = await Promise.all(CNPJS_WON.map(buscarLojaWon));
+  /* Ranking de pessoas (vendedores) somando as 3 lojas. */
+  const consolidado = new Map<string, { valor: number; itens: number }>();
+  for (const loja of lojas) {
+    for (const [nome, dados] of loja.pessoas) {
+      const atual = consolidado.get(nome) ?? { valor: 0, itens: 0 };
+      atual.valor += dados.valor;
+      atual.itens += dados.itens;
+      consolidado.set(nome, atual);
+    }
+  }
+  const pessoas = [...consolidado.entries()]
+    .map(([nome, d]) => ({ nome, valor: d.valor, itens: d.itens }))
+    .sort((a, b) => b.valor - a.valor)
+    .slice(0, 20);
+  console.log(`[resumo-grupo][WON] ${pessoas.length} vendedores no ranking`);
   return {
     empresa: "won",
     nome: "WON",
-    realizado_ano: totais.reduce((soma, valor) => soma + valor, 0),
+    pessoas,
+    realizado_ano: lojas.reduce((soma, loja) => soma + loja.total, 0),
     /* meta_ano propositalmente fora do upsert: a meta da WON é configurada
        direto na tabela e a atualização não pode apagá-la. */
     fonte: "Linx Microvix",
@@ -349,7 +387,12 @@ async function atualizarResumo() {
       .maybeSingle();
     metaWon = (atual?.meta_ano as number | null) ?? null;
   }
-  const linhas = won ? [nlg.row, s4, { ...won, meta_ano: metaWon }] : [nlg.row, s4];
+  /* `pessoas` não é coluna da tabela: viaja só na resposta JSON. */
+  const pessoasWon = won?.pessoas ?? null;
+  const linhaWon = won
+    ? (({ pessoas: _p, ...resto }) => ({ ...resto, meta_ano: metaWon }))(won)
+    : null;
+  const linhas = linhaWon ? [nlg.row, s4, linhaWon] : [nlg.row, s4];
   const { data, error } = await supabaseAdmin
     .from("resumo_grupo")
     .upsert(linhas, { onConflict: "empresa" })
@@ -367,11 +410,15 @@ async function atualizarResumo() {
       resumo.push({ ...retratoWon, fonte: "retrato" });
     }
   }
-  const final = resumo.map((row) =>
-    row.empresa === "nlgcomex" && nlg.progressoMensal
-      ? { ...row, progressoMensal: nlg.progressoMensal }
-      : row,
-  );
+  const final = resumo.map((row) => {
+    if (row.empresa === "nlgcomex" && nlg.progressoMensal) {
+      return { ...row, progressoMensal: nlg.progressoMensal };
+    }
+    if (row.empresa === "won" && pessoasWon) {
+      return { ...row, pessoas: pessoasWon };
+    }
+    return row;
+  });
   return {
     ok: true,
     atualizadoEm: new Date().toISOString(),
