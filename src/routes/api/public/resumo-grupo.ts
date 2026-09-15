@@ -286,11 +286,27 @@ function cabecalhoCsvValido(texto: string): boolean {
 }
 
 async function buscarWON() {
-  const totais = await Promise.all(CNPJS_WON.map(buscarLojaWon));
+  const lojas = await Promise.all(CNPJS_WON.map(buscarLojaWon));
+  /* Ranking de pessoas (vendedores) somando as 3 lojas. */
+  const consolidado = new Map<string, { valor: number; itens: number }>();
+  for (const loja of lojas) {
+    for (const [nome, dados] of loja.pessoas) {
+      const atual = consolidado.get(nome) ?? { valor: 0, itens: 0 };
+      atual.valor += dados.valor;
+      atual.itens += dados.itens;
+      consolidado.set(nome, atual);
+    }
+  }
+  const pessoas = [...consolidado.entries()]
+    .map(([nome, d]) => ({ nome, valor: d.valor, itens: d.itens }))
+    .sort((a, b) => b.valor - a.valor)
+    .slice(0, 20);
+  console.log(`[resumo-grupo][WON] ${pessoas.length} vendedores no ranking`);
   return {
     empresa: "won",
     nome: "WON",
-    realizado_ano: totais.reduce((soma, valor) => soma + valor, 0),
+    pessoas,
+    realizado_ano: lojas.reduce((soma, loja) => soma + loja.total, 0),
     /* meta_ano propositalmente fora do upsert: a meta da WON é configurada
        direto na tabela e a atualização não pode apagá-la. */
     fonte: "Linx Microvix",
