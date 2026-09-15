@@ -18,6 +18,13 @@ export const ENDPOINT_RESUMO = "/api/public/resumo-grupo";
 
 export type EstadoFonte = "ao-vivo" | "retrato" | "carregando";
 
+/** Ranking de pessoas (vendedores) de uma unidade, quando a fonte manda. */
+export interface PessoaFonte {
+  nome: string;
+  valor: number;
+  itens?: number;
+}
+
 export interface ResumoFonte {
   id: UnidadeId;
   realizadoAno: number;
