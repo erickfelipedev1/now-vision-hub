@@ -35,6 +35,8 @@ export interface ResumoFonte {
   estado: EstadoFonte;
   /** Percentual da meta anual realizado em cada mês, 12 posições. */
   progressoMensal?: number[];
+  /** Ranking de pessoas, quando a fonte manda (ex.: vendedores da WON). */
+  pessoas?: PessoaFonte[];
 }
 
 interface LinhaResumo {
