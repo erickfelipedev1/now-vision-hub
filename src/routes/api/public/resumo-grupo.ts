@@ -129,7 +129,22 @@ function campo(registro: RegistroMicrovix, nome: string): unknown {
   return chave ? registro[chave] : undefined;
 }
 
-async function buscarLojaWon(cnpj: string): Promise<number> {
+/** Nome do vendedor: a Microvix manda no campo obs ("Nome do Vendedor: X"). */
+function nomeVendedor(registro: RegistroMicrovix): string {
+  const obs = String(campo(registro, "obs") ?? "");
+  const achado = obs.match(/Nome do Vendedor:\s*([^|]+)/i);
+  const nome = achado?.[1]?.trim();
+  if (nome) return nome;
+  const cod = String(campo(registro, "cod_vendedor") ?? "").trim();
+  return cod ? `Vendedor ${cod}` : "Sem vendedor";
+}
+
+interface ResultadoLojaWon {
+  total: number;
+  pessoas: Map<string, { valor: number; itens: number }>;
+}
+
+async function buscarLojaWon(cnpj: string): Promise<ResultadoLojaWon> {
   const chave = process.env["MICROVIX_CHAVE"];
   const usuario = process.env["MICROVIX_USER"];
   const senha = process.env["MICROVIX_PASSWORD"];
