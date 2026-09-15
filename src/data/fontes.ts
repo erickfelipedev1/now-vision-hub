@@ -47,6 +47,7 @@ interface LinhaResumo {
   fonte: string;
   atualizado_em: string;
   progressoMensal?: number[];
+  pessoas?: PessoaFonte[];
 }
 
 interface RespostaResumo {
