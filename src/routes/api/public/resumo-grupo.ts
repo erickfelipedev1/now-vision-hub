@@ -387,7 +387,12 @@ async function atualizarResumo() {
       .maybeSingle();
     metaWon = (atual?.meta_ano as number | null) ?? null;
   }
-  const linhas = won ? [nlg.row, s4, { ...won, meta_ano: metaWon }] : [nlg.row, s4];
+  /* `pessoas` não é coluna da tabela: viaja só na resposta JSON. */
+  const pessoasWon = won?.pessoas ?? null;
+  const linhaWon = won
+    ? (({ pessoas: _p, ...resto }) => ({ ...resto, meta_ano: metaWon }))(won)
+    : null;
+  const linhas = linhaWon ? [nlg.row, s4, linhaWon] : [nlg.row, s4];
   const { data, error } = await supabaseAdmin
     .from("resumo_grupo")
     .upsert(linhas, { onConflict: "empresa" })
