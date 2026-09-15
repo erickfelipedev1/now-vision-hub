@@ -1,4 +1,4 @@
-import { RefreshCw, Database, Radio } from "lucide-react";
+import { RefreshCw, Database, Radio, Users } from "lucide-react";
 import type { UnidadeConfig } from "@/config/dashboards";
 import type { ResumoGrupo } from "@/hooks/useResumoGrupo";
 
@@ -50,6 +50,8 @@ export default function PainelResumo({
   const largura = (pct / escala) * 100;
   const marcaMeta = (100 / escala) * 100;
   const bateu = pct >= 100;
+  const pessoas = fonte?.pessoas ?? [];
+  const maiorPessoa = pessoas.reduce((m, p) => Math.max(m, p.valor), 0);
 
   return (
     <section className="flex h-full items-center justify-center px-6 py-12">
