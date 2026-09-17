@@ -410,6 +410,16 @@ async function atualizarResumo() {
       resumo.push({ ...retratoWon, fonte: "retrato" });
     }
   }
+  /* NDL ainda não tem fonte automática: a linha é mantida manualmente na
+     tabela e viaja como retrato. */
+  if (!resumo.some((r) => r.empresa === "ndl")) {
+    const { data: ndl } = await supabaseAdmin
+      .from("resumo_grupo")
+      .select()
+      .eq("empresa", "ndl")
+      .maybeSingle();
+    if (ndl) resumo.push({ ...ndl, fonte: "retrato" });
+  }
   const final = resumo.map((row) => {
     if (row.empresa === "nlgcomex" && nlg.progressoMensal) {
       return { ...row, progressoMensal: nlg.progressoMensal };
