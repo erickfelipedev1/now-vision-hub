@@ -116,8 +116,8 @@ export async function buscarResumos(
 
   const nlg = linhas.find((l) => l.id === "nlgcomex") ?? doRetrato("nlgcomex");
   const s4 = linhas.find((l) => l.id === "pulse4s") ?? doRetrato("pulse4s");
-  const won = linhas.find((l) => l.id === "won");
-  return won ? [nlg, s4, won] : [nlg, s4];
+  const extras = linhas.filter((l) => l.id === "won" || l.id === "ndl");
+  return [nlg, s4, ...extras];
 }
 
 /** O grupo é a soma — a única conta do portal. */
