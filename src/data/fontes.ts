@@ -74,7 +74,8 @@ function daLinha(l: LinhaResumo): ResumoFonte | null {
   if (
     l.empresa !== "nlgcomex" &&
     l.empresa !== "pulse4s" &&
-    l.empresa !== "won"
+    l.empresa !== "won" &&
+    l.empresa !== "ndl"
   ) return null;
   const metaAno = l.meta_ano ?? undefined;
   return {
