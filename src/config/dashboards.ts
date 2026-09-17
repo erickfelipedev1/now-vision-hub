@@ -85,9 +85,11 @@ export const UNIDADES: UnidadeConfig[] = [
     id: "ndl",
     nome: "NDL",
     descricao: "Aguardando definição da fonte de dados",
+    url: "https://groupnow-ndl.lovable.app",
     cor: "#3FA35E",
     fonteDados: "A definir",
-    pendente: true,
+    larguraBase: 1920,
+    urlParams: { origem: "portal-diretoria" },
   },
 ];
 
