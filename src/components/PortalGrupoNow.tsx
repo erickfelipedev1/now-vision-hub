@@ -157,7 +157,11 @@ export default function PortalGrupoNow() {
             }`}
           >
             {view === "overview" ? (
-              <ExecutiveOverview resumo={resumo} onNavigate={navegar} />
+              <ExecutiveOverview
+                resumo={resumo}
+                onNavigate={navegar}
+                onOpenMenu={() => setMenuAberto(true)}
+              />
             ) : (
               unidadeAtiva &&
                (unidadeAtiva.pendente ? (

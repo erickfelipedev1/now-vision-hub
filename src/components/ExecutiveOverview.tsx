@@ -10,6 +10,7 @@ import {
   ChevronDown,
   CircleDollarSign,
   Clock3,
+  Menu,
   RefreshCw,
   Search,
   Target,
@@ -29,6 +30,7 @@ type Visualizacao = "consolidada" | "empresa" | "area";
 interface ExecutiveOverviewProps {
   resumo: ResumoGrupo;
   onNavigate: (id: UnidadeId) => void;
+  onOpenMenu: () => void;
 }
 
 const brl = (value: number, compact = false) =>
@@ -175,7 +177,7 @@ function Donut({ shares }: { shares: { name: string; value: number; color: strin
   );
 }
 
-export default function ExecutiveOverview({ resumo, onNavigate }: ExecutiveOverviewProps) {
+export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: ExecutiveOverviewProps) {
   const [view, setView] = useState<Visualizacao>("consolidada");
   const [search, setSearch] = useState("");
   const [metric, setMetric] = useState("Receita");
@@ -212,10 +214,13 @@ export default function ExecutiveOverview({ resumo, onNavigate }: ExecutiveOverv
     <div className="min-h-full bg-background">
       <div className="sticky top-0 z-20 border-b border-border/80 bg-background/95 backdrop-blur">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 lg:px-6">
-          <label className="relative min-w-0 max-w-xl">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por empresa, métrica, pessoa ou período..." className="h-10 w-full rounded-md border border-border bg-card pl-10 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-exec-blue" />
-          </label>
+          <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 lg:block">
+            <Button variant="ghost" size="icon" onClick={onOpenMenu} aria-label="Abrir menu" title="Abrir menu" className="lg:hidden"><Menu className="size-5" /></Button>
+            <label className="relative block min-w-0 max-w-xl">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por empresa, métrica, pessoa ou período..." className="h-10 w-full rounded-md border border-border bg-card pl-10 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-exec-blue" />
+            </label>
+          </div>
           <div className="flex shrink-0 items-center gap-2">
             <Button variant="outline" size="sm" className="hidden gap-2 md:flex"><CalendarDays className="size-4" />Ano corrente<ChevronDown className="size-3" /></Button>
             <Button variant="outline" size="icon" onClick={refresh} disabled={resumo.carregando} aria-label="Atualizar dados" title="Atualizar dados"><RefreshCw className={`size-4 ${resumo.carregando ? "animate-spin" : ""}`} /></Button>
