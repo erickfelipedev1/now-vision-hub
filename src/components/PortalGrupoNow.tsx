@@ -13,6 +13,7 @@ import ProgressoMetas from "@/components/ProgressoMetas";
 import LogoGrupoNow from "@/components/LogoGrupoNow";
 import DashboardEmbed from "@/components/DashboardEmbed";
 import PainelResumo from "@/components/PainelResumo";
+import ExecutiveOverview from "@/components/ExecutiveOverview";
 import { UNIDADES, CORES, type UnidadeId } from "@/config/dashboards";
 import { useResumoGrupo } from "@/hooks/useResumoGrupo";
 import { RECEITA_MENSAL, PERIODOS, type PeriodoId } from "@/data/mock";

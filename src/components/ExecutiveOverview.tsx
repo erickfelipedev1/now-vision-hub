@@ -66,6 +66,9 @@ const companySpark = [
   [22, 28, 26, 35, 40, 38, 46, 45, 54],
 ];
 
+const defaultCompanySpark = [34, 38, 35, 42, 50, 48, 55, 53, 62];
+const largestClientShare = mockClients[0]?.share ?? 1;
+
 function Sparkline({ values, color }: { values: number[]; color: string }) {
   const max = Math.max(...values);
   const min = Math.min(...values);
@@ -183,7 +186,7 @@ export default function ExecutiveOverview({ resumo, onNavigate }: ExecutiveOverv
     const value = source?.realizadoAno ?? 0;
     const share = resumo.grupo.realizado > 0 ? (value / resumo.grupo.realizado) * 100 : 0;
     const growth = source?.progresso !== undefined ? Math.min(source.progresso - 60, 28) : 0;
-    return { ...unit, value, share, growth, source, spark: companySpark[index] ?? companySpark[0] };
+    return { ...unit, value, share, growth, source, spark: companySpark[index] ?? defaultCompanySpark };
   }), [resumo.grupo.realizado, sources]);
 
   const filteredCompanies = companies.filter((company) => company.nome.toLowerCase().includes(search.toLowerCase()));
@@ -316,7 +319,7 @@ export default function ExecutiveOverview({ resumo, onNavigate }: ExecutiveOverv
         <section className="rounded-md border border-border bg-card p-4">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3"><div><h2 className="flex items-center gap-2 text-sm font-semibold"><BriefcaseBusiness className="size-4 text-exec-violet" />Top 5 clientes</h2><p className="mt-1 text-xs text-muted-foreground">Faturamento demonstrativo no período.</p></div><Button variant="ghost" size="sm" className="h-8 gap-1 text-xs text-exec-blue">Ver todos<ArrowRight className="size-3" /></Button></div>
           <div className="mt-4 grid gap-x-5 lg:grid-cols-2 xl:grid-cols-5">
-            {mockClients.map((client, index) => <div key={client.name} className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-2 border-b border-border/60 py-3 xl:border-b-0"><span className="w-5 text-xs text-muted-foreground">{String(index + 1).padStart(2, "0")}</span><span className={`grid size-8 place-items-center rounded-full text-[9px] font-bold text-primary-foreground ${client.color}`}>{client.initials}</span><div className="min-w-0"><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><span className="truncate text-xs font-medium">{client.name}</span><strong className="text-[10px] tabular-nums">{brl(client.value, true)} · {pct(client.share)}</strong></div><div className="mt-2 h-1 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${client.color}`} style={{ width: `${(client.share / mockClients[0].share) * 100}%` }} /></div></div></div>)}
+            {mockClients.map((client, index) => <div key={client.name} className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-2 border-b border-border/60 py-3 xl:border-b-0"><span className="w-5 text-xs text-muted-foreground">{String(index + 1).padStart(2, "0")}</span><span className={`grid size-8 place-items-center rounded-full text-[9px] font-bold text-primary-foreground ${client.color}`}>{client.initials}</span><div className="min-w-0"><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><span className="truncate text-xs font-medium">{client.name}</span><strong className="text-[10px] tabular-nums">{brl(client.value, true)} · {pct(client.share)}</strong></div><div className="mt-2 h-1 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${client.color}`} style={{ width: `${(client.share / largestClientShare) * 100}%` }} /></div></div></div>)}
           </div>
         </section>
       </div>
