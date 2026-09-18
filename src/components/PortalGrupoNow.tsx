@@ -143,7 +143,7 @@ export default function PortalGrupoNow() {
               </h1>
               <p className="truncate text-[12px] text-[#6F7987]">
                 {view === "overview"
-                  ? `Consolidado das empresas do Grupo Now · ${RECORTE.rotulo} (${RECORTE.detalhe})`
+                  ? "Acompanhe os principais indicadores e o desempenho das empresas do grupo."
                   : unidadeAtiva?.descricao}
               </p>
             </div>
