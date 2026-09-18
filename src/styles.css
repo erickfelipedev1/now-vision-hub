@@ -68,6 +68,10 @@
   --color-good: var(--good);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
+  --color-exec-blue: var(--executive-blue);
+  --color-exec-cyan: var(--executive-cyan);
+  --color-exec-violet: var(--executive-violet);
+  --color-exec-orange: var(--executive-orange);
 }
 
 :root {
@@ -100,6 +104,10 @@
   --good: #3e9b62;
   --warn: #c08a1e;
   --bad: #c4483b;
+  --executive-blue: oklch(0.67 0.19 253);
+  --executive-cyan: oklch(0.73 0.14 196);
+  --executive-violet: oklch(0.68 0.19 301);
+  --executive-orange: oklch(0.71 0.18 47);
   --chart-1: var(--nlg);
   --chart-2: var(--j4s);
   --chart-3: var(--gold);
