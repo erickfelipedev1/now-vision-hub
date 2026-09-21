@@ -3,13 +3,13 @@ import {
   Bell,
   CalendarDays,
   ChartNoAxesCombined,
+  ChevronRight,
   CircleDollarSign,
   Gauge,
   Map,
   Menu,
   RefreshCw,
   Search,
-  Target,
   TrendingUp,
   TriangleAlert,
   WalletCards,
@@ -228,10 +228,10 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
     : `O Grupo NOW está ${pct(progresso ?? 0)} da meta anual, mas ${abaixoDaMeta.map((c) => c.nome).join(" e ")} ${abaixoDaMeta.length > 1 ? "estão" : "está"} abaixo do esperado.`;
 
   const kpis = [
-    { label: "Receita realizada no ano", value: brl(realizado), note: `${sources.length} empresas consolidadas`, icon: CircleDollarSign },
-    { label: "% da meta anual", value: progresso !== undefined ? pct(progresso) : "—", note: progresso !== undefined ? (progresso >= 100 ? "meta atingida" : `${pct(100 - progresso)} para a meta`) : "sem meta", icon: Gauge },
-    { label: "Projeção anual", value: projecaoAnual !== undefined ? brl(projecaoAnual, true) : "—", note: projecaoAnual !== undefined && meta > 0 ? `${projecaoAnual >= meta ? "+" : ""}${brl(projecaoAnual - meta, true)} vs. meta` : `${mesesComDados} mês(es) com dados`, icon: TrendingUp },
-    { label: "Falta para a meta", value: meta > 0 ? brl(saldo) : "—", note: saldo === 0 && meta > 0 ? "meta anual atingida" : "ainda restante no ano", icon: WalletCards },
+    { label: "Receita realizada no ano", value: brl(realizado), note: `${sources.length} empresas consolidadas`, icon: CircleDollarSign, progress: undefined as number | undefined },
+    { label: "% da meta anual", value: progresso !== undefined ? pct(progresso) : "—", note: progresso !== undefined ? (progresso >= 100 ? "meta atingida" : `${pct(100 - progresso)} para a meta`) : "sem meta", icon: Gauge, progress: progresso },
+    { label: "Projeção anual", value: projecaoAnual !== undefined ? brl(projecaoAnual, true) : "—", note: projecaoAnual !== undefined && meta > 0 ? `${projecaoAnual >= meta ? "+" : ""}${brl(projecaoAnual - meta, true)} vs. meta` : `${mesesComDados} mês(es) com dados`, icon: TrendingUp, progress: meta > 0 && projecaoAnual !== undefined ? (projecaoAnual / meta) * 100 : undefined },
+    { label: "Falta para a meta", value: meta > 0 ? brl(saldo) : "—", note: saldo === 0 && meta > 0 ? "meta anual atingida" : "ainda restante no ano", icon: WalletCards, progress: progresso },
   ];
 
   return (
@@ -288,28 +288,50 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
         </div>
 
         {/* Saúde do grupo — resumo textual calculado sobre os números reais */}
-        <div className="rounded-xl border p-4" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
-          <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide" style={{ color: CREAM.good }}><Gauge className="size-3.5" />Saúde do Grupo NOW</h2>
-          <p className="mt-1.5 text-sm" style={{ color: CREAM.text }}>{saudeTexto}</p>
+        <div className="relative overflow-hidden rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)]" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
+          <svg className="pointer-events-none absolute inset-y-0 right-0 h-full w-2/3 opacity-[0.08]" viewBox="0 0 600 140" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0,90 C80,40 160,130 240,80 C320,30 400,110 480,60 C540,25 580,55 600,40" fill="none" stroke={CREAM.good} strokeWidth="3" />
+            <path d="M0,110 C90,70 170,140 260,100 C340,65 420,120 500,85 C550,60 580,80 600,70" fill="none" stroke={CREAM.good} strokeWidth="2" opacity="0.6" />
+          </svg>
+          <div className="relative flex items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-full shadow-sm" style={{ backgroundColor: CREAM.good, color: CREAM.card }}>
+              <ChartNoAxesCombined className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: CREAM.good }}>Saúde do Grupo NOW</h2>
+              <p className="mt-1 text-sm" style={{ color: CREAM.text }}>{saudeTexto}</p>
+            </div>
+            <ChevronRight className="ml-auto hidden size-5 shrink-0 sm:block" style={{ color: CREAM.muted }} aria-hidden="true" />
+          </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {kpis.map((item) => (
-            <article key={item.label} className="min-w-0 rounded-xl border p-4 transition-transform duration-200 hover:-translate-y-0.5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
-              <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-md" style={{ backgroundColor: `${CREAM.good}1A`, color: CREAM.good }}><item.icon className="size-5" /></div>
-                <p className="text-[11px] font-semibold uppercase" style={{ color: CREAM.muted }}>{item.label}</p>
+            <article
+              key={item.label}
+              className="group min-w-0 rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(43,42,33,0.08)]"
+              style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.good}17`, color: CREAM.good }}><item.icon className="size-5" /></div>
+                <p className="min-w-0 flex-1 text-[11px] font-semibold uppercase leading-snug" style={{ color: CREAM.muted }}>{item.label}</p>
+                <ChevronRight className="size-4 shrink-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ color: CREAM.muted }} aria-hidden="true" />
               </div>
               <div className="mt-4 min-w-0">
                 <strong className="block truncate text-xl tabular-nums" style={{ color: CREAM.text }}>{item.value}</strong>
                 <p className="mt-2 text-[11px]" style={{ color: CREAM.muted }}>{item.note}</p>
+                {item.progress !== undefined && (
+                  <div className="mt-3 h-1 w-full overflow-hidden rounded-full" style={{ backgroundColor: CREAM.border }}>
+                    <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, item.progress))}%`, backgroundColor: CREAM.good }} />
+                  </div>
+                )}
               </div>
             </article>
           ))}
         </div>
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.72fr)_minmax(330px,0.78fr)]">
-          <section className="rounded-xl border p-4 lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
+          <section className="rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)] lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
               <div>
                 <h2 className="flex items-center gap-2 text-sm font-semibold"><ChartNoAxesCombined className="size-4" style={{ color: CREAM.good }} />Evolução do grupo</h2>
@@ -323,7 +345,7 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
             {chartValues.length > 1 ? <MainChart values={chartValues} metaAno={meta} /> : <Vazio texto="Nenhuma empresa publica série mensal no momento." />}
           </section>
 
-          <section id="atencao-diretoria" className="rounded-xl border p-4 lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
+          <section id="atencao-diretoria" className="rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)] lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
             <h2 className="flex items-center gap-2 text-sm font-semibold"><TriangleAlert className="size-4" style={{ color: CREAM.warn }} />Atenção da diretoria</h2>
             <p className="mt-1 text-xs" style={{ color: CREAM.muted }}>{abaixoDaMeta.length} ponto(s) de atenção — empresas abaixo da meta.</p>
             <div className="mt-4 space-y-1">
@@ -332,13 +354,16 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
                 const progressoEmpresa = company.source?.progresso ?? 0;
                 const cor = statusCor(progressoEmpresa);
                 return (
-                  <button key={company.id} onClick={() => onNavigate(company.id)} className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md p-2 text-left transition-colors hover:opacity-80" style={{ backgroundColor: "transparent" }}>
-                    <span className="size-2.5 rounded-full" style={{ backgroundColor: cor }} />
+                  <button key={company.id} onClick={() => onNavigate(company.id)} className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg p-2 text-left transition-colors" style={{ backgroundColor: "transparent" }}>
+                    <span className="grid size-8 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${cor}1F` }}>
+                      <span className="size-2.5 rounded-full" style={{ backgroundColor: cor }} />
+                    </span>
                     <span className="min-w-0">
                       <span className="block truncate text-xs font-medium" style={{ color: CREAM.text }}>{company.nome}</span>
                       <span className="block truncate text-[10px]" style={{ color: CREAM.muted }}>{brl(company.value, true)} de {brl(company.meta ?? 0, true)}</span>
                     </span>
                     <strong className="shrink-0 text-xs tabular-nums" style={{ color: cor }}>{pct(progressoEmpresa)}</strong>
+                    <ChevronRight className="size-4 shrink-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ color: CREAM.muted }} aria-hidden="true" />
                   </button>
                 );
               })}
@@ -346,7 +371,7 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
           </section>
         </div>
 
-        <section id="performance-empresas" className="rounded-xl border p-4 lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
+        <section id="performance-empresas" className="rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)] lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
             <div>
               <h2 className="text-sm font-semibold">Performance por empresa</h2>
@@ -359,10 +384,12 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
               const cor = statusCor(progressoEmpresa);
               const statusLabel = progressoEmpresa === undefined ? "sem meta" : progressoEmpresa >= 100 ? "Acima da meta" : progressoEmpresa >= 70 ? "Em atenção" : "Abaixo da meta";
               return (
-                <button key={company.id} onClick={() => onNavigate(company.id)} className="min-w-0 rounded-lg border p-3 text-left transition-colors" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
+                <button key={company.id} onClick={() => onNavigate(company.id)} className="group min-w-0 rounded-xl border p-3 text-left shadow-[0_1px_2px_rgba(43,42,33,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(43,42,33,0.08)]" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-2 text-xs font-medium" style={{ color: CREAM.text }}>
-                      <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: company.cor }} />
+                      <span className="grid size-6 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${company.cor}26` }}>
+                        <span className="size-2 rounded-full" style={{ backgroundColor: company.cor }} />
+                      </span>
                       <span className="truncate">{company.nome}</span>
                     </span>
                     <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ color: cor, backgroundColor: `${cor}24` }}>{statusLabel}</span>
@@ -379,57 +406,75 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
           </div>
         </section>
 
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.9fr)]">
-          <section className="rounded-xl border p-4 lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
-            <h2 className="text-sm font-semibold">Receita e faturamento</h2>
-            <p className="mt-1 text-xs" style={{ color: CREAM.muted }}>Ritmo real contra o necessário para bater a meta.</p>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { label: "Receita acumulada", value: brl(realizado, true), sub: meta > 0 ? `${pct(progresso ?? 0)} da meta` : "sem meta" },
-                { label: "Meta anual", value: meta > 0 ? brl(meta, true) : "sem meta", sub: `${comMeta.length} empresa(s) com meta` },
-                { label: "Projeção anual", value: projecaoAnual !== undefined ? brl(projecaoAnual, true) : "—", sub: `${mesesComDados} mês(es) com dados` },
-                { label: "Falta para a meta", value: meta > 0 ? brl(saldo, true) : "—", sub: `${mesesRestantes} mês(es) restantes` },
-              ].map((item) => (
-                <div key={item.label} className="min-w-0 rounded-lg border p-3" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
-                  <p className="truncate text-[10px] uppercase" style={{ color: CREAM.muted }}>{item.label}</p>
-                  <strong className="mt-1 block truncate text-sm tabular-nums" style={{ color: CREAM.text }}>{item.value}</strong>
-                  <p className="mt-1 truncate text-[10px]" style={{ color: CREAM.muted }}>{item.sub}</p>
-                </div>
-              ))}
+        <section className="rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)] lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
+          <h2 className="text-sm font-semibold">Receita e faturamento</h2>
+          <p className="mt-1 text-xs" style={{ color: CREAM.muted }}>Ritmo real contra o necessário para bater a meta.</p>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: "Receita acumulada", value: brl(realizado, true), sub: meta > 0 ? `${pct(progresso ?? 0)} da meta` : "sem meta" },
+              { label: "Meta anual", value: meta > 0 ? brl(meta, true) : "sem meta", sub: `${comMeta.length} empresa(s) com meta` },
+              { label: "Projeção anual", value: projecaoAnual !== undefined ? brl(projecaoAnual, true) : "—", sub: `${mesesComDados} mês(es) com dados` },
+              { label: "Falta para a meta", value: meta > 0 ? brl(saldo, true) : "—", sub: `${mesesRestantes} mês(es) restantes` },
+            ].map((item) => (
+              <div key={item.label} className="min-w-0 rounded-xl border p-3" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
+                <p className="truncate text-[10px] uppercase" style={{ color: CREAM.muted }}>{item.label}</p>
+                <strong className="mt-1 block truncate text-sm tabular-nums" style={{ color: CREAM.text }}>{item.value}</strong>
+                <p className="mt-1 truncate text-[10px]" style={{ color: CREAM.muted }}>{item.sub}</p>
+              </div>
+            ))}
+          </div>
+          {mesesRestantes > 0 && (
+            <div className="mt-4 rounded-xl border p-3" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
+              <div className="flex items-center justify-between text-[11px]" style={{ color: CREAM.muted }}><span>Ritmo atual</span><span>Ritmo necessário</span></div>
+              <div className="relative mt-2 h-2.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: CREAM.border }}>
+                <div className="h-full rounded-full" style={{ width: `${Math.min(100, (ritmoAtual / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.good }} />
+                <div className="absolute inset-y-0 w-px" style={{ left: `${Math.min(100, (ritmoNecessario / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.dark }} />
+              </div>
+              <div className="mt-1.5 flex items-center justify-between text-[11px] tabular-nums"><span style={{ color: CREAM.good }}>{brl(ritmoAtual, true)}/mês</span><span style={{ color: CREAM.muted }}>{brl(ritmoNecessario, true)}/mês</span></div>
             </div>
-            {mesesRestantes > 0 && (
-              <div className="mt-4 rounded-lg border p-3" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
-                <div className="flex items-center justify-between text-[11px]" style={{ color: CREAM.muted }}><span>Ritmo atual</span><span>Ritmo necessário</span></div>
-                <div className="relative mt-2 h-2.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: CREAM.border }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, (ritmoAtual / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.good }} />
-                  <div className="absolute inset-y-0 w-px" style={{ left: `${Math.min(100, (ritmoNecessario / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.dark }} />
-                </div>
-                <div className="mt-1.5 flex items-center justify-between text-[11px] tabular-nums"><span style={{ color: CREAM.good }}>{brl(ritmoAtual, true)}/mês</span><span style={{ color: CREAM.muted }}>{brl(ritmoNecessario, true)}/mês</span></div>
-              </div>
-            )}
-          </section>
+          )}
+        </section>
 
-          <section className="rounded-xl border p-4 lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
-            <h2 className="flex items-center gap-2 text-sm font-semibold"><Map className="size-4" style={{ color: CREAM.good }} />Mapa executivo</h2>
-            <p className="mt-1 text-xs" style={{ color: CREAM.muted }}>Onde estamos performando?</p>
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center justify-between rounded-md border px-3 py-2 text-xs" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
-                <span className="font-medium" style={{ color: CREAM.text }}>Grupo NOW</span>
-                <strong className="tabular-nums" style={{ color: statusCor(progresso) }}>{progresso !== undefined ? pct(progresso) : "—"}</strong>
+        {/* Mapa executivo — card escuro em destaque, trilha clicável por empresa */}
+        <section className="rounded-2xl p-4 shadow-[0_8px_24px_rgba(36,33,25,0.25)] lg:p-5" style={{ backgroundColor: CREAM.dark }}>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.good}33`, color: "#9FD98A" }}>
+                <Map className="size-5" />
               </div>
-              {companies.map((company) => {
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold" style={{ color: CREAM.card }}>Mapa executivo</h2>
+                <p className="truncate text-xs" style={{ color: `${CREAM.card}99` }}>Onde estamos performando?</p>
+              </div>
+            </div>
+
+            <div className="flex flex-1 flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs" style={{ backgroundColor: `${CREAM.good}26`, color: "#C6E8B8" }}>
+                <span className="font-medium">Grupo NOW</span>
+                <strong className="tabular-nums">{progresso !== undefined ? pct(progresso) : "—"}</strong>
+              </div>
+              {companies.map((company, index) => {
                 const p = company.source?.progresso;
+                const cor = p !== undefined && p >= 100 ? "#9FD98A" : p !== undefined && p >= 70 ? "#E8C77E" : "#E39A8C";
                 return (
-                  <button key={company.id} onClick={() => onNavigate(company.id)} className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-xs transition-colors" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
-                    <span className="flex items-center gap-2 truncate" style={{ color: CREAM.text }}><span className="size-2 rounded-full" style={{ backgroundColor: company.cor }} />{company.nome}</span>
-                    <strong className="tabular-nums" style={{ color: statusCor(p) }}>{p !== undefined ? pct(p) : "—"}</strong>
-                  </button>
+                  <span key={company.id} className="flex items-center gap-2">
+                    <ChevronRight className="size-3.5 shrink-0" style={{ color: `${CREAM.card}55` }} aria-hidden="true" />
+                    <button onClick={() => onNavigate(company.id)} className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs transition-colors" style={{ backgroundColor: `${CREAM.card}14`, color: CREAM.card }}>
+                      <span className="size-1.5 rounded-full" style={{ backgroundColor: company.cor }} />
+                      <span className="truncate">{company.nome}</span>
+                      <strong className="tabular-nums" style={{ color: cor }}>{p !== undefined ? pct(p) : "—"}</strong>
+                    </button>
+                  </span>
                 );
               })}
             </div>
-            <p className="mt-3 flex items-center justify-between text-[10px]" style={{ color: CREAM.muted }}><span>{aoVivo}/{sources.length} fontes ao vivo</span><span>{lider ? `Líder: ${lider.nome}` : "—"}</span></p>
-          </section>
-        </div>
+
+            <p className="ml-auto flex shrink-0 items-center gap-3 text-[11px]" style={{ color: `${CREAM.card}80` }}>
+              <span>{aoVivo}/{sources.length} fontes ao vivo</span>
+              <span>{lider ? `Líder: ${lider.nome}` : "—"}</span>
+            </p>
+          </div>
+        </section>
       </div>
     </div>
   );
