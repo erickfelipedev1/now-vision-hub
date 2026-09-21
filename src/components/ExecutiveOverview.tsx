@@ -13,8 +13,6 @@ import {
   Search,
   Target,
   TrendingUp,
-  UsersRound,
-};
   WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
