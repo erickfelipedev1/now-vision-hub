@@ -288,9 +288,11 @@ function cabecalhoCsvValido(texto: string): boolean {
 async function buscarWON() {
   const lojas = await Promise.all(CNPJS_WON.map(buscarLojaWon));
   /* Ranking de pessoas (vendedores) somando as 3 lojas. */
+  const PESSOAS_EXCLUIDAS = [/^jess\s+vaz$/i]; // a direção pediu fora do ranking
   const consolidado = new Map<string, { valor: number; itens: number }>();
   for (const loja of lojas) {
     for (const [nome, dados] of loja.pessoas) {
+      if (PESSOAS_EXCLUIDAS.some((re) => re.test(nome.trim()))) continue;
       const atual = consolidado.get(nome) ?? { valor: 0, itens: 0 };
       atual.valor += dados.valor;
       atual.itens += dados.itens;
