@@ -2,18 +2,20 @@ import { useState } from "react";
 import { ChevronRight, Map } from "lucide-react";
 import type { UnidadeConfig, UnidadeId } from "@/config/dashboards";
 
-/** Paleta creme — escopada às telas executivas (Visão geral / Apresentação). */
+/** Paleta preto e branco — escopada às telas executivas (Visão geral / Apresentação). */
 export const CREAM = {
-  bg: "#F6F0E1",
-  card: "#FFFCF4",
-  cardSoft: "#F1EAD8",
-  border: "#E6DBC0",
-  text: "#2B2A21",
-  muted: "#8C8367",
-  good: "#4B6B3C",
-  warn: "#B4802A",
-  bad: "#AE4131",
-  dark: "#242119",
+  bg: "#FFFFFF",
+  card: "#FFFFFF",
+  cardSoft: "#F4F4F4",
+  border: "#DEDEDE",
+  text: "#111111",
+  muted: "#6E6E6E",
+  good: "#B8B8B8",
+  warn: "#6E6E6E",
+  bad: "#111111",
+  dark: "#0A0A0A",
+  /** Preto usado para elementos de marca/decorativos (não é status). */
+  accent: "#111111",
 };
 
 export const brl = (value: number, compact = false) =>
@@ -35,7 +37,7 @@ export const dataHora = (iso: string) => {
     : d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 };
 
-/** Verde/âmbar/vermelho a partir do progresso real contra a meta — mesma régua do app inteiro. */
+/** Escala de cinza a partir do progresso real contra a meta — quanto mais escuro, mais urgente. */
 export function statusCor(progresso: number | undefined) {
   if (progresso === undefined) return CREAM.muted;
   if (progresso >= 100) return CREAM.good;
@@ -147,7 +149,7 @@ export function MapaExecutivo({
     <section className="rounded-2xl p-4 shadow-[0_8px_24px_rgba(36,33,25,0.25)] lg:p-5" style={{ backgroundColor: CREAM.dark }}>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid size-10 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.good}33`, color: "#9FD98A" }}>
+          <div className="grid size-10 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.card}26`, color: CREAM.card }}>
             <Map className="size-5" />
           </div>
           <div className="min-w-0">
@@ -157,13 +159,13 @@ export function MapaExecutivo({
         </div>
 
         <div className="flex flex-1 flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs" style={{ backgroundColor: `${CREAM.good}26`, color: "#C6E8B8" }}>
+          <div className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs" style={{ backgroundColor: `${CREAM.card}26`, color: CREAM.card }}>
             <span className="font-medium">Grupo NOW</span>
             <strong className="tabular-nums">{progresso !== undefined ? pct(progresso) : "—"}</strong>
           </div>
           {companies.map((company) => {
             const p = company.source?.progresso;
-            const cor = p !== undefined && p >= 100 ? "#9FD98A" : p !== undefined && p >= 70 ? "#E8C77E" : "#E39A8C";
+            const cor = p !== undefined && p >= 100 ? `${CREAM.card}80` : p !== undefined && p >= 70 ? `${CREAM.card}B3` : CREAM.card;
             return (
               <span key={company.id} className="flex items-center gap-2">
                 <ChevronRight className="size-3.5 shrink-0" style={{ color: `${CREAM.card}55` }} aria-hidden="true" />

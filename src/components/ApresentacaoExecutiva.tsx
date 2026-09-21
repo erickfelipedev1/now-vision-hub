@@ -58,13 +58,13 @@ export default function ApresentacaoExecutiva({ resumo, onNavigate }: Apresentac
         <div className="relative overflow-hidden rounded-2xl border p-5 shadow-[0_1px_3px_rgba(43,42,33,0.06)] lg:p-6" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
           <svg className="pointer-events-none absolute inset-y-0 right-0 h-full w-1/2 opacity-[0.10]" viewBox="0 0 500 200" preserveAspectRatio="none" aria-hidden="true">
             <polygon points="180,0 500,0 500,200 60,200" fill={CREAM.dark} />
-            <polygon points="260,0 500,0 500,200 140,200" fill={CREAM.good} opacity="0.5" />
+            <polygon points="260,0 500,0 500,200 140,200" fill={CREAM.accent} opacity="0.5" />
           </svg>
           <div className="relative flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <LogoGrupoNow className="mt-0.5 h-8 w-auto shrink-0" />
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: CREAM.good }}>Apresentação executiva</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: CREAM.accent }}>Apresentação executiva</p>
                 <h1 className="mt-1 text-2xl font-bold leading-tight lg:text-3xl">Visão Geral do Grupo NOW</h1>
                 <p className="mt-1 text-sm" style={{ color: CREAM.muted }}>Desempenho, principais resultados e próximos passos.</p>
               </div>
@@ -73,8 +73,8 @@ export default function ApresentacaoExecutiva({ resumo, onNavigate }: Apresentac
               <span className="rounded-full border px-3 py-1.5 text-xs" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft, color: CREAM.text }}>Ano <strong className="ml-1 tabular-nums">{anoCorrente}</strong></span>
               <span className="rounded-full border px-3 py-1.5 text-xs" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft, color: CREAM.text }}>Período <strong className="ml-1">{ultimoMesComDados ? `Até ${ultimoMesComDados}/${anoCorrente}` : "—"}</strong></span>
               {ultimaAtualizacao && (
-                <span className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs" style={{ borderColor: `${CREAM.good}4D`, backgroundColor: `${CREAM.good}1A`, color: CREAM.good }}>
-                  <span className="size-1.5 rounded-full" style={{ backgroundColor: CREAM.good }} />Atualizado em {dataHora(ultimaAtualizacao).split(" ").pop()}
+                <span className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs" style={{ borderColor: `${CREAM.accent}4D`, backgroundColor: `${CREAM.accent}1A`, color: CREAM.accent }}>
+                  <span className="size-1.5 rounded-full" style={{ backgroundColor: CREAM.accent }} />Atualizado em {dataHora(ultimaAtualizacao).split(" ").pop()}
                 </span>
               )}
             </div>
@@ -86,7 +86,7 @@ export default function ApresentacaoExecutiva({ resumo, onNavigate }: Apresentac
           {kpis.map((item) => (
             <div key={item.label} className="min-w-0 p-4" style={{ backgroundColor: CREAM.dark }}>
               <div className="flex items-center gap-2">
-                <div className="grid size-8 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.good}33`, color: "#9FD98A" }}>
+                <div className="grid size-8 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.card}26`, color: CREAM.card }}>
                   <item.icon className="size-4" />
                 </div>
                 <p className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-wide" style={{ color: `${CREAM.card}99` }}>{item.label}</p>
@@ -101,11 +101,11 @@ export default function ApresentacaoExecutiva({ resumo, onNavigate }: Apresentac
           <section className="rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)] lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
               <div>
-                <h2 className="flex items-center gap-2 text-sm font-semibold"><ChartNoAxesCombined className="size-4" style={{ color: CREAM.good }} />Evolução do grupo</h2>
+                <h2 className="flex items-center gap-2 text-sm font-semibold"><ChartNoAxesCombined className="size-4" style={{ color: CREAM.accent }} />Evolução do grupo</h2>
                 <p className="mt-1 text-xs" style={{ color: CREAM.muted }}>Realizado x meta — somente empresas que publicam série mensal.</p>
               </div>
               <div className="flex items-center gap-3 text-[11px]" style={{ color: CREAM.muted }}>
-                <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm" style={{ backgroundColor: CREAM.good }} />Realizado</span>
+                <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm" style={{ backgroundColor: CREAM.accent }} />Realizado</span>
                 <span className="flex items-center gap-1.5"><span className="h-0.5 w-3" style={{ backgroundImage: `repeating-linear-gradient(90deg,${CREAM.dark} 0 3px,transparent 3px 6px)` }} />Meta</span>
               </div>
             </div>
@@ -190,17 +190,17 @@ export default function ApresentacaoExecutiva({ resumo, onNavigate }: Apresentac
               <div className="mt-4 rounded-xl p-3" style={{ backgroundColor: `${CREAM.card}0F` }}>
                 <div className="flex items-center justify-between text-[11px]" style={{ color: `${CREAM.card}80` }}><span>Ritmo atual</span><span>Ritmo necessário</span></div>
                 <div className="relative mt-2 h-2.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: `${CREAM.card}1A` }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, (ritmoAtual / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: "#9FD98A" }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, (ritmoAtual / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.card }} />
                   <div className="absolute inset-y-0 w-px" style={{ left: `${Math.min(100, (ritmoNecessario / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.card }} />
                 </div>
-                <div className="mt-1.5 flex items-center justify-between text-[11px] tabular-nums"><span style={{ color: "#9FD98A" }}>{brl(ritmoAtual, true)}/mês</span><span style={{ color: `${CREAM.card}80` }}>{brl(ritmoNecessario, true)}/mês</span></div>
+                <div className="mt-1.5 flex items-center justify-between text-[11px] tabular-nums"><span style={{ color: CREAM.card }}>{brl(ritmoAtual, true)}/mês</span><span style={{ color: `${CREAM.card}80` }}>{brl(ritmoNecessario, true)}/mês</span></div>
               </div>
             )}
           </section>
 
           <section className="rounded-2xl p-4 shadow-[0_8px_24px_rgba(36,33,25,0.2)] lg:p-5" style={{ backgroundColor: CREAM.dark }}>
             <h2 className="flex items-center gap-2 text-sm font-semibold" style={{ color: CREAM.card }}>
-              <span className="grid size-6 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.good}33`, color: "#9FD98A" }}><Gauge className="size-3.5" /></span>
+              <span className="grid size-6 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.card}26`, color: CREAM.card }}><Gauge className="size-3.5" /></span>
               Leitura executiva
             </h2>
             <p className="mt-3 text-sm leading-relaxed" style={{ color: `${CREAM.card}CC` }}>{leituraExecutiva}</p>

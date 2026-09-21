@@ -93,8 +93,8 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
           <div className="flex shrink-0 items-center gap-2">
             <Button variant="outline" size="sm" className="hidden gap-2 md:flex" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card, color: CREAM.text }}><CalendarDays className="size-4" />Ano corrente</Button>
             {ultimaAtualizacao && (
-              <span className="hidden items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-medium md:flex" style={{ borderColor: `${CREAM.good}4D`, backgroundColor: `${CREAM.good}1A`, color: CREAM.good }}>
-                <span className="size-1.5 rounded-full" style={{ backgroundColor: CREAM.good }} />Atualizado às {dataHora(ultimaAtualizacao).split(" ").pop()}
+              <span className="hidden items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-medium md:flex" style={{ borderColor: `${CREAM.accent}4D`, backgroundColor: `${CREAM.accent}1A`, color: CREAM.accent }}>
+                <span className="size-1.5 rounded-full" style={{ backgroundColor: CREAM.accent }} />Atualizado às {dataHora(ultimaAtualizacao).split(" ").pop()}
               </span>
             )}
             <Button variant="outline" size="icon" onClick={refresh} disabled={resumo.carregando} aria-label="Atualizar dados" title="Atualizar dados" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card, color: CREAM.text }}><RefreshCw className={`size-4 ${resumo.carregando ? "animate-spin" : ""}`} /></Button>
@@ -129,15 +129,15 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
         {/* Saúde do grupo — resumo textual calculado sobre os números reais */}
         <div className="relative overflow-hidden rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)]" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
           <svg className="pointer-events-none absolute inset-y-0 right-0 h-full w-2/3 opacity-[0.08]" viewBox="0 0 600 140" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0,90 C80,40 160,130 240,80 C320,30 400,110 480,60 C540,25 580,55 600,40" fill="none" stroke={CREAM.good} strokeWidth="3" />
-            <path d="M0,110 C90,70 170,140 260,100 C340,65 420,120 500,85 C550,60 580,80 600,70" fill="none" stroke={CREAM.good} strokeWidth="2" opacity="0.6" />
+            <path d="M0,90 C80,40 160,130 240,80 C320,30 400,110 480,60 C540,25 580,55 600,40" fill="none" stroke={CREAM.accent} strokeWidth="3" />
+            <path d="M0,110 C90,70 170,140 260,100 C340,65 420,120 500,85 C550,60 580,80 600,70" fill="none" stroke={CREAM.accent} strokeWidth="2" opacity="0.6" />
           </svg>
           <div className="relative flex items-center gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-full shadow-sm" style={{ backgroundColor: CREAM.good, color: CREAM.card }}>
+            <div className="grid size-10 shrink-0 place-items-center rounded-full shadow-sm" style={{ backgroundColor: CREAM.accent, color: CREAM.card }}>
               <ChartNoAxesCombined className="size-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: CREAM.good }}>Saúde do Grupo NOW</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: CREAM.accent }}>Saúde do Grupo NOW</h2>
               <p className="mt-1 text-sm" style={{ color: CREAM.text }}>{saudeTextoCompleto}</p>
             </div>
             <ChevronRight className="ml-auto hidden size-5 shrink-0 sm:block" style={{ color: CREAM.muted }} aria-hidden="true" />
@@ -152,7 +152,7 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
               style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}
             >
               <div className="flex items-center gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.good}17`, color: CREAM.good }}><item.icon className="size-5" /></div>
+                <div className="grid size-10 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.accent}17`, color: CREAM.accent }}><item.icon className="size-5" /></div>
                 <p className="min-w-0 flex-1 text-[11px] font-semibold uppercase leading-snug" style={{ color: CREAM.muted }}>{item.label}</p>
                 <ChevronRight className="size-4 shrink-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ color: CREAM.muted }} aria-hidden="true" />
               </div>
@@ -161,7 +161,7 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
                 <p className="mt-2 text-[11px]" style={{ color: CREAM.muted }}>{item.note}</p>
                 {item.progress !== undefined && (
                   <div className="mt-3 h-1 w-full overflow-hidden rounded-full" style={{ backgroundColor: CREAM.border }}>
-                    <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, item.progress))}%`, backgroundColor: CREAM.good }} />
+                    <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.min(100, Math.max(0, item.progress))}%`, backgroundColor: CREAM.accent }} />
                   </div>
                 )}
               </div>
@@ -173,11 +173,11 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
           <section className="rounded-2xl border p-4 shadow-[0_1px_3px_rgba(43,42,33,0.06)] lg:p-5" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
               <div>
-                <h2 className="flex items-center gap-2 text-sm font-semibold"><ChartNoAxesCombined className="size-4" style={{ color: CREAM.good }} />Evolução do grupo</h2>
+                <h2 className="flex items-center gap-2 text-sm font-semibold"><ChartNoAxesCombined className="size-4" style={{ color: CREAM.accent }} />Evolução do grupo</h2>
                 <p className="mt-1 text-xs" style={{ color: CREAM.muted }}>Realizado x meta — somente empresas que publicam série mensal.</p>
               </div>
               <div className="flex items-center gap-3 text-[11px]" style={{ color: CREAM.muted }}>
-                <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm" style={{ backgroundColor: CREAM.good }} />Realizado</span>
+                <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm" style={{ backgroundColor: CREAM.accent }} />Realizado</span>
                 <span className="flex items-center gap-1.5"><span className="h-0.5 w-3" style={{ backgroundImage: `repeating-linear-gradient(90deg,${CREAM.dark} 0 3px,transparent 3px 6px)` }} />Meta</span>
               </div>
             </div>
@@ -266,10 +266,10 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
             <div className="mt-4 rounded-xl border p-3" style={{ borderColor: CREAM.border, backgroundColor: CREAM.cardSoft }}>
               <div className="flex items-center justify-between text-[11px]" style={{ color: CREAM.muted }}><span>Ritmo atual</span><span>Ritmo necessário</span></div>
               <div className="relative mt-2 h-2.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: CREAM.border }}>
-                <div className="h-full rounded-full" style={{ width: `${Math.min(100, (ritmoAtual / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.good }} />
+                <div className="h-full rounded-full" style={{ width: `${Math.min(100, (ritmoAtual / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.accent }} />
                 <div className="absolute inset-y-0 w-px" style={{ left: `${Math.min(100, (ritmoNecessario / Math.max(ritmoAtual, ritmoNecessario, 1)) * 100)}%`, backgroundColor: CREAM.dark }} />
               </div>
-              <div className="mt-1.5 flex items-center justify-between text-[11px] tabular-nums"><span style={{ color: CREAM.good }}>{brl(ritmoAtual, true)}/mês</span><span style={{ color: CREAM.muted }}>{brl(ritmoNecessario, true)}/mês</span></div>
+              <div className="mt-1.5 flex items-center justify-between text-[11px] tabular-nums"><span style={{ color: CREAM.accent }}>{brl(ritmoAtual, true)}/mês</span><span style={{ color: CREAM.muted }}>{brl(ritmoNecessario, true)}/mês</span></div>
             </div>
           )}
         </section>
