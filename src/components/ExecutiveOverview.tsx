@@ -186,11 +186,6 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
     })).filter((point) => point.value > 0);
   }, [sources]);
 
-  const pessoas = useMemo(() => {
-    const todas = sources.flatMap((source) => (source.pessoas ?? []).map((pessoa) => ({ ...pessoa, unidade: source.id })));
-    return todas.sort((a, b) => b.valor - a.valor).slice(0, 5);
-  }, [sources]);
-  const maiorPessoa = pessoas[0]?.valor ?? 1;
 
   const refresh = () => resumo.recarregar();
 
@@ -352,22 +347,6 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
           </section>
         </div>
 
-        <section className="rounded-md border border-border bg-card p-4">
-          <div><h2 className="flex items-center gap-2 text-sm font-semibold"><UsersRound className="size-4 text-exec-violet" />Top pessoas por faturamento</h2><p className="mt-1 text-xs text-muted-foreground">Ranking real informado pelas fontes das empresas.</p></div>
-          {pessoas.length ? (
-            <div className="mt-4 grid gap-x-5 lg:grid-cols-2 xl:grid-cols-5">
-              {pessoas.map((pessoa, index) => (
-                <div key={`${pessoa.unidade}-${pessoa.nome}`} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 border-b border-border/60 py-3 xl:border-b-0">
-                  <span className="w-5 text-xs text-muted-foreground">{String(index + 1).padStart(2, "0")}</span>
-                  <div className="min-w-0">
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><span className="truncate text-xs font-medium">{pessoa.nome}</span><strong className="text-[10px] tabular-nums">{brl(pessoa.valor, true)}</strong></div>
-                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-exec-violet" style={{ width: `${(pessoa.valor / maiorPessoa) * 100}%` }} /></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : <Vazio texto="Nenhuma fonte enviou ranking de pessoas." />}
-        </section>
       </div>
     </div>
   );
