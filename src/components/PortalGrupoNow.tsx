@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Clock3, LayoutGrid, Menu, X } from "lucide-react";
+import { Clock3, LayoutGrid, Menu, Presentation, X } from "lucide-react";
 import LogoGrupoNow from "@/components/LogoGrupoNow";
 import DashboardEmbed from "@/components/DashboardEmbed";
 import PainelResumo from "@/components/PainelResumo";
 import ExecutiveOverview from "@/components/ExecutiveOverview";
+import ApresentacaoExecutiva from "@/components/ApresentacaoExecutiva";
 import { UNIDADES, type UnidadeId } from "@/config/dashboards";
 import { useResumoGrupo } from "@/hooks/useResumoGrupo";
 
-type View = "overview" | UnidadeId;
+type View = "overview" | "apresentacao" | UnidadeId;
 
 /** Quem acompanha o portal. Ajuste os cargos se precisar. */
 const DIRETORIA = [
@@ -27,7 +28,7 @@ export default function PortalGrupoNow() {
   const navegar = (destino: View) => {
     setView(destino);
     setMenuAberto(false);
-    if (destino === "overview") setTelaCheia(false);
+    if (destino === "overview" || destino === "apresentacao") setTelaCheia(false);
   };
 
   return (
@@ -64,6 +65,17 @@ export default function PortalGrupoNow() {
             >
               <LayoutGrid size={16} aria-hidden="true" />
               Visão geral
+            </button>
+            <button
+              onClick={() => navegar("apresentacao")}
+              className={`mb-1 flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[14px] transition-colors ${
+                view === "apresentacao"
+                  ? "bg-[#16202C] font-medium text-[#E9EDF2]"
+                  : "text-[#8A94A3] hover:bg-[#131A23] hover:text-[#E9EDF2]"
+              }`}
+            >
+              <Presentation size={16} aria-hidden="true" />
+              Apresentação
             </button>
 
             <p className="px-2 pb-2 pt-4 text-[11px] font-medium uppercase tracking-wide text-[#5A6472]">
@@ -125,7 +137,7 @@ export default function PortalGrupoNow() {
         <div className="flex min-w-0 min-h-0 flex-1 flex-col">
           <header
             className={`h-16 shrink-0 items-center gap-3 border-b border-[#1C242F] bg-[#0D1219] px-5 ${
-              telaCheia || view === "overview" ? "hidden" : "flex"
+              telaCheia || view === "overview" || view === "apresentacao" ? "hidden" : "flex"
             }`}
           >
             <button
@@ -137,14 +149,10 @@ export default function PortalGrupoNow() {
             </button>
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-[15px] font-semibold">
-                {view === "overview"
-                  ? "Visão geral do grupo"
-                  : unidadeAtiva?.nome}
+                {unidadeAtiva?.nome}
               </h1>
               <p className="truncate text-[12px] text-[#6F7987]">
-                {view === "overview"
-                  ? "Acompanhe os principais indicadores e o desempenho das empresas do grupo."
-                  : unidadeAtiva?.descricao}
+                {unidadeAtiva?.descricao}
               </p>
             </div>
 
@@ -153,7 +161,7 @@ export default function PortalGrupoNow() {
 
           <main
             className={`min-h-0 min-w-0 flex-1 ${
-              view === "overview" ? "overflow-auto" : "overflow-hidden"
+              view === "overview" || view === "apresentacao" ? "overflow-auto" : "overflow-hidden"
             }`}
           >
             {view === "overview" ? (
@@ -162,6 +170,8 @@ export default function PortalGrupoNow() {
                 onNavigate={navegar}
                 onOpenMenu={() => setMenuAberto(true)}
               />
+            ) : view === "apresentacao" ? (
+              <ApresentacaoExecutiva resumo={resumo} onNavigate={navegar} />
             ) : (
               unidadeAtiva &&
                (unidadeAtiva.pendente ? (

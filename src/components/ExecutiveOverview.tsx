@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Bell,
   CalendarDays,
@@ -6,7 +6,6 @@ import {
   ChevronRight,
   CircleDollarSign,
   Gauge,
-  Map,
   Menu,
   RefreshCw,
   Search,
@@ -15,8 +14,10 @@ import {
   WalletCards,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { UNIDADES, type UnidadeId } from "@/config/dashboards";
+import type { UnidadeId } from "@/config/dashboards";
 import type { ResumoGrupo } from "@/hooks/useResumoGrupo";
+import { useVisaoGrupo } from "@/hooks/useVisaoGrupo";
+import { CREAM, MainChart, MapaExecutivo, Sparkline, Vazio, brl, dataHora, pct, statusCor } from "@/components/executive-shared";
 
 type Visualizacao = "consolidada" | "empresa" | "area";
 
@@ -24,64 +25,6 @@ interface ExecutiveOverviewProps {
   resumo: ResumoGrupo;
   onNavigate: (id: UnidadeId) => void;
   onOpenMenu: () => void;
-}
-
-const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-const brl = (value: number, compact = false) =>
-  value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    ...(compact
-      ? { notation: "compact", maximumFractionDigits: 1 }
-      : { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-  });
-
-const pct = (value: number) =>
-  `${value.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
-
-const dataHora = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? "—"
-    : d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-};
-
-/** Paleta creme — escopada a esta tela; o resto do app segue nos tokens escuros globais. */
-const CREAM = {
-  bg: "#F6F0E1",
-  card: "#FFFCF4",
-  cardSoft: "#F1EAD8",
-  border: "#E6DBC0",
-  text: "#2B2A21",
-  muted: "#8C8367",
-  good: "#4B6B3C",
-  warn: "#B4802A",
-  bad: "#AE4131",
-  dark: "#242119",
-};
-
-/** Verde/âmbar/vermelho a partir do progresso real contra a meta — mesma régua do app inteiro. */
-function statusCor(progresso: number | undefined) {
-  if (progresso === undefined) return CREAM.muted;
-  if (progresso >= 100) return CREAM.good;
-  if (progresso >= 70) return CREAM.warn;
-  return CREAM.bad;
-}
-
-function Sparkline({ values, color }: { values: number[]; color: string }) {
-  if (values.length < 2) return null;
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-  const span = Math.max(1, max - min);
-  const points = values
-    .map((value, index) => `${(index / (values.length - 1)) * 96 + 2},${31 - ((value - min) / span) * 25}`)
-    .join(" ");
-  return (
-    <svg viewBox="0 0 100 36" className="h-9 w-24" aria-hidden="true">
-      <polyline points={points} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
 }
 
 function SkeletonDashboard() {
@@ -99,96 +42,17 @@ function SkeletonDashboard() {
   );
 }
 
-/**
- * Barras de receita realizada por mês + linha pontilhada de meta (ritmo linear
- * da meta anual real ao longo dos 12 meses). Sem dado fabricado: a meta vem
- * do total anual real já consolidado; só a distribuição mensal é projetada.
- */
-function MainChart({ values, metaAno }: { values: { month: string; value: number }[]; metaAno: number }) {
-  const [active, setActive] = useState(values.length - 1);
-  const width = 820;
-  const height = 270;
-  const pad = { left: 58, right: 22, top: 24, bottom: 36 };
-  const metaMensal = metaAno > 0 ? metaAno / 12 : 0;
-  const max = Math.max(...values.map((point) => point.value), metaMensal, 1);
-  const ceiling = Math.ceil(max / 1_000_000) * 1_000_000 || max;
-  const chartWidth = width - pad.left - pad.right;
-  const chartHeight = height - pad.top - pad.bottom;
-  const barGap = 10;
-  const barWidth = Math.max(8, chartWidth / values.length - barGap);
-  const x = (index: number) => pad.left + (index / values.length) * chartWidth + (chartWidth / values.length - barWidth) / 2;
-  const y = (value: number) => pad.top + chartHeight - (value / ceiling) * chartHeight;
-  const ticks = [0, ceiling / 2, ceiling];
-  const metaY = metaMensal > 0 ? y(Math.min(metaMensal, ceiling)) : null;
-
-  return (
-    <div className="relative mt-3 min-h-[250px]">
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full" onMouseLeave={() => setActive(values.length - 1)}>
-        {ticks.map((tick) => (
-          <g key={tick}>
-            <line x1={pad.left} x2={width - pad.right} y1={y(tick)} y2={y(tick)} stroke={CREAM.border} strokeDasharray="2 4" />
-            <text x={pad.left - 12} y={y(tick) + 4} textAnchor="end" fill={CREAM.muted} className="text-[10px]">
-              {tick === 0 ? "R$ 0" : brl(tick, true)}
-            </text>
-          </g>
-        ))}
-        {values.map((point, index) => (
-          <g key={point.month} onMouseEnter={() => setActive(index)} className="cursor-pointer">
-            <rect
-              x={x(index)}
-              y={y(point.value)}
-              width={barWidth}
-              height={Math.max(0, pad.top + chartHeight - y(point.value))}
-              rx="3"
-              fill={active === index ? CREAM.good : `${CREAM.good}55`}
-              className="transition-colors duration-150"
-            />
-            <text x={x(index) + barWidth / 2} y={height - 10} textAnchor="middle" fill={CREAM.muted} className="text-[10px]">
-              {point.month}
-            </text>
-          </g>
-        ))}
-        {metaY !== null && (
-          <line x1={pad.left} x2={width - pad.right} y1={metaY} y2={metaY} stroke={CREAM.dark} strokeWidth="1.5" strokeDasharray="5 4" opacity="0.45" />
-        )}
-      </svg>
-      <div className="pointer-events-none absolute right-3 top-1 rounded-lg border px-2.5 py-2 text-xs shadow-sm" style={{ borderColor: CREAM.border, backgroundColor: CREAM.card }}>
-        <p style={{ color: CREAM.muted }}>{values[active]?.month}</p>
-        <p className="font-semibold tabular-nums" style={{ color: CREAM.text }}>{brl(values[active]?.value ?? 0)}</p>
-      </div>
-    </div>
-  );
-}
-
-function Vazio({ texto }: { texto: string }) {
-  return <p className="py-8 text-center text-xs" style={{ color: CREAM.muted }}>{texto}</p>;
-}
-
 export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: ExecutiveOverviewProps) {
   const [view, setView] = useState<Visualizacao>("consolidada");
   const [search, setSearch] = useState("");
-  const sources = resumo.fontes;
 
-  const companies = useMemo(() => UNIDADES.map((unit) => {
-    const source = sources.find((item) => item.id === unit.id);
-    const value = source?.realizadoAno ?? 0;
-    const share = resumo.grupo.realizado > 0 ? (value / resumo.grupo.realizado) * 100 : 0;
-    const serie = source?.progressoMensal?.filter((point) => point > 0) ?? [];
-    const meta = source?.metaAno;
-    return { ...unit, value, share, source, meta, serie };
-  }), [resumo.grupo.realizado, sources]);
+  const {
+    sources, companies, chartValues, realizado, meta, progresso, saldo, comMeta, abaixoDaMeta,
+    lider, aoVivo, mesesComDados, mesesRestantes, projecaoAnual, ritmoAtual, ritmoNecessario,
+    ultimaAtualizacao, saudeTexto,
+  } = useVisaoGrupo(resumo);
 
   const filteredCompanies = companies.filter((company) => company.nome.toLowerCase().includes(search.toLowerCase()));
-
-  // Receita acumulada do grupo: só entram as fontes que publicam série mensal real.
-  const chartValues = useMemo(() => {
-    const comSerie = sources.filter((source) => source.progressoMensal?.length && source.metaAno);
-    if (comSerie.length === 0) return [] as { month: string; value: number }[];
-    return MESES.map((month, index) => ({
-      month,
-      value: comSerie.reduce((sum, source) => sum + ((source.progressoMensal?.[index] ?? 0) / 100) * (source.metaAno ?? 0), 0),
-    })).filter((point) => point.value > 0);
-  }, [sources]);
 
   const refresh = () => resumo.recarregar();
 
@@ -200,32 +64,7 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
 
   if (resumo.carregando) return <SkeletonDashboard />;
 
-  const realizado = resumo.grupo.realizado;
-  const meta = resumo.grupo.meta;
-  const progresso = resumo.grupo.progresso;
-  const saldo = Math.max(0, meta - realizado);
-  const comMeta = companies.filter((company) => (company.meta ?? 0) > 0);
-  const acimaDaMeta = comMeta.filter((company) => company.value >= (company.meta ?? 0)).length;
-  const abaixoDaMeta = comMeta.filter((company) => company.value < (company.meta ?? 0));
-  const lider = [...companies].sort((a, b) => b.value - a.value)[0];
-  const aoVivo = sources.filter((source) => source.estado === "ao-vivo").length;
-
-  // Meses com receita real registrada, para projeção linear e ritmo — cálculo
-  // transparente sobre número real, não estimativa externa.
-  const mesesComDados = chartValues.length;
-  const mesesRestantes = Math.max(0, 12 - mesesComDados);
-  const projecaoAnual = mesesComDados > 0 ? (realizado / mesesComDados) * 12 : undefined;
-  const ritmoAtual = mesesComDados > 0 ? realizado / mesesComDados : 0;
-  const ritmoNecessario = mesesRestantes > 0 ? saldo / mesesRestantes : 0;
-
-  const ultimaAtualizacao = sources.reduce<string | undefined>((latest, source) => {
-    if (!latest) return source.atualizadoEm;
-    return new Date(source.atualizadoEm) > new Date(latest) ? source.atualizadoEm : latest;
-  }, undefined);
-
-  const saudeTexto = abaixoDaMeta.length === 0
-    ? `O Grupo NOW está ${pct(progresso ?? 0)} da meta anual, com todas as empresas dentro do esperado.`
-    : `O Grupo NOW está ${pct(progresso ?? 0)} da meta anual, mas ${abaixoDaMeta.map((c) => c.nome).join(" e ")} ${abaixoDaMeta.length > 1 ? "estão" : "está"} abaixo do esperado.`;
+  const saudeTextoCompleto = `O Grupo NOW está ${pct(progresso ?? 0)} da meta anual, ${saudeTexto}.`;
 
   const kpis = [
     { label: "Receita realizada no ano", value: brl(realizado), note: `${sources.length} empresas consolidadas`, icon: CircleDollarSign, progress: undefined as number | undefined },
@@ -299,7 +138,7 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
             </div>
             <div className="min-w-0">
               <h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: CREAM.good }}>Saúde do Grupo NOW</h2>
-              <p className="mt-1 text-sm" style={{ color: CREAM.text }}>{saudeTexto}</p>
+              <p className="mt-1 text-sm" style={{ color: CREAM.text }}>{saudeTextoCompleto}</p>
             </div>
             <ChevronRight className="ml-auto hidden size-5 shrink-0 sm:block" style={{ color: CREAM.muted }} aria-hidden="true" />
           </div>
@@ -435,46 +274,14 @@ export default function ExecutiveOverview({ resumo, onNavigate, onOpenMenu }: Ex
           )}
         </section>
 
-        {/* Mapa executivo — card escuro em destaque, trilha clicável por empresa */}
-        <section className="rounded-2xl p-4 shadow-[0_8px_24px_rgba(36,33,25,0.25)] lg:p-5" style={{ backgroundColor: CREAM.dark }}>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="grid size-10 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${CREAM.good}33`, color: "#9FD98A" }}>
-                <Map className="size-5" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-sm font-semibold" style={{ color: CREAM.card }}>Mapa executivo</h2>
-                <p className="truncate text-xs" style={{ color: `${CREAM.card}99` }}>Onde estamos performando?</p>
-              </div>
-            </div>
-
-            <div className="flex flex-1 flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs" style={{ backgroundColor: `${CREAM.good}26`, color: "#C6E8B8" }}>
-                <span className="font-medium">Grupo NOW</span>
-                <strong className="tabular-nums">{progresso !== undefined ? pct(progresso) : "—"}</strong>
-              </div>
-              {companies.map((company, index) => {
-                const p = company.source?.progresso;
-                const cor = p !== undefined && p >= 100 ? "#9FD98A" : p !== undefined && p >= 70 ? "#E8C77E" : "#E39A8C";
-                return (
-                  <span key={company.id} className="flex items-center gap-2">
-                    <ChevronRight className="size-3.5 shrink-0" style={{ color: `${CREAM.card}55` }} aria-hidden="true" />
-                    <button onClick={() => onNavigate(company.id)} className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs transition-colors" style={{ backgroundColor: `${CREAM.card}14`, color: CREAM.card }}>
-                      <span className="size-1.5 rounded-full" style={{ backgroundColor: company.cor }} />
-                      <span className="truncate">{company.nome}</span>
-                      <strong className="tabular-nums" style={{ color: cor }}>{p !== undefined ? pct(p) : "—"}</strong>
-                    </button>
-                  </span>
-                );
-              })}
-            </div>
-
-            <p className="ml-auto flex shrink-0 items-center gap-3 text-[11px]" style={{ color: `${CREAM.card}80` }}>
-              <span>{aoVivo}/{sources.length} fontes ao vivo</span>
-              <span>{lider ? `Líder: ${lider.nome}` : "—"}</span>
-            </p>
-          </div>
-        </section>
+        <MapaExecutivo
+          companies={companies}
+          progresso={progresso}
+          aoVivo={aoVivo}
+          totalFontes={sources.length}
+          liderNome={lider?.nome}
+          onNavigate={onNavigate}
+        />
       </div>
     </div>
   );
