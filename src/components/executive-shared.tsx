@@ -2,20 +2,26 @@ import { useState } from "react";
 import { ChevronRight, Map } from "lucide-react";
 import type { UnidadeConfig, UnidadeId } from "@/config/dashboards";
 
-/** Paleta preto e branco — escopada às telas executivas (Visão geral / Apresentação). */
+/**
+ * Paleta preto e branco invertida (dark) — escopada às telas executivas
+ * (Visão geral / Apresentação). `dark` e `accent` guardam o tom CLARO usado
+ * nos painéis de contraste (Mapa executivo, faixas de KPI) — o nome ficou do
+ * momento em que o tema era claro; o que importa é o par card/dark sempre
+ * ter contraste suficiente entre si.
+ */
 export const CREAM = {
-  bg: "#FFFFFF",
-  card: "#FFFFFF",
-  cardSoft: "#F4F4F4",
-  border: "#DEDEDE",
-  text: "#111111",
-  muted: "#6E6E6E",
-  good: "#B8B8B8",
-  warn: "#6E6E6E",
-  bad: "#111111",
-  dark: "#0A0A0A",
-  /** Preto usado para elementos de marca/decorativos (não é status). */
-  accent: "#111111",
+  bg: "#0B0B0A",
+  card: "#161614",
+  cardSoft: "#1E1E1B",
+  border: "#2C2C28",
+  text: "#F2F1EA",
+  muted: "#9C988C",
+  good: "#4A4944",
+  warn: "#9C988C",
+  bad: "#F2F1EA",
+  dark: "#F2F1EA",
+  /** Tom claro usado para elementos de marca/decorativos (não é status). */
+  accent: "#F2F1EA",
 };
 
 export const brl = (value: number, compact = false) =>
@@ -105,7 +111,7 @@ export function MainChart({ values, metaAno }: { values: { month: string; value:
               width={barWidth}
               height={Math.max(0, pad.top + chartHeight - y(point.value))}
               rx="3"
-              fill={active === index ? CREAM.good : `${CREAM.good}55`}
+              fill={active === index ? CREAM.accent : `${CREAM.accent}55`}
               className="transition-colors duration-150"
             />
             <text x={x(index) + barWidth / 2} y={height - 10} textAnchor="middle" fill={CREAM.muted} className="text-[10px]">
