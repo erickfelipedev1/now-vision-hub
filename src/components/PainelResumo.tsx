@@ -1,4 +1,4 @@
-import { RefreshCw, Database, Radio, Users } from "lucide-react";
+import { RefreshCw, Database, Radio } from "lucide-react";
 import type { UnidadeConfig } from "@/config/dashboards";
 import type { ResumoGrupo } from "@/hooks/useResumoGrupo";
 
@@ -50,8 +50,6 @@ export default function PainelResumo({
   const largura = (pct / escala) * 100;
   const marcaMeta = (100 / escala) * 100;
   const bateu = pct >= 100;
-  const pessoas = fonte?.pessoas ?? [];
-  const maiorPessoa = pessoas.reduce((m, p) => Math.max(m, p.valor), 0);
 
   return (
     <section className="flex h-full items-center justify-center px-6 py-12">
@@ -195,47 +193,6 @@ export default function PainelResumo({
             </div>
           )}
         </div>
-
-        {/* Pessoas — mesmo espírito do ranking da Jornada 4S */}
-        {pessoas.length > 0 && (
-          <div className="mt-6 rounded-xl border border-[#1C242F] bg-[#12171F] p-6">
-            <h3 className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-[#E9EDF2]">
-              <Users size={14} aria-hidden="true" />
-              Pessoas — faturamento no ano
-            </h3>
-            <ul className="space-y-3">
-              {pessoas.map((p, i) => {
-                const largura = maiorPessoa > 0 ? (p.valor / maiorPessoa) * 100 : 0;
-                return (
-                  <li key={p.nome}>
-                    <div className="mb-1 flex items-baseline justify-between gap-3">
-                      <span className="truncate text-[13px] text-[#E9EDF2]">
-                        <span className="mr-2 text-[11px] tabular-nums text-[#5A6472]">
-                          {i + 1}
-                        </span>
-                        {p.nome}
-                      </span>
-                      <span className="shrink-0 text-[13px] font-semibold tabular-nums text-[#E9EDF2]">
-                        {brl(p.valor)}
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1A222C]">
-                      <div
-                        className="h-full rounded-full transition-[width] duration-500"
-                        style={{ width: `${largura}%`, background: unidade.cor }}
-                      />
-                    </div>
-                    {p.itens !== undefined && (
-                      <p className="mt-1 text-[11px] tabular-nums text-[#5A6472]">
-                        {p.itens.toLocaleString("pt-BR")} itens vendidos
-                      </p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
       </div>
     </section>
   );
